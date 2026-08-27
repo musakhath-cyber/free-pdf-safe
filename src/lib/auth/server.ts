@@ -97,6 +97,8 @@ const VERCEL_ALLOWED_HOSTS: string[] = [
     "free-pdf-safe-app-pe-sites.vercel.app",
     "pdf-safe.vercel.app",
     "pdf-safe-pe-sites.vercel.app",
+    "freepdfsafe.online",
+    "www.freepdfsafe.online",
   ].filter((host): host is string => Boolean(host)),
 ];
 // Local `npm run dev` (port 8080 contract). Browsers may send Origin as any of
