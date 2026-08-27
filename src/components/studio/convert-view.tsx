@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, FileStack, Loader2, RotateCw, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, RotateCw, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -71,18 +71,16 @@ export function ConvertView() {
             void onFiles(event.dataTransfer.files);
           }}
           onClick={() => inputRef.current?.click()}
-          className="drop-stage flex min-h-[280px] flex-col items-center justify-center gap-3 px-6 py-10 text-center"
+          className="drop-stage flex min-h-[320px] flex-col items-center justify-center gap-3 px-6 py-12 text-center"
         >
-          <span className="flex size-12 items-center justify-center rounded-lg bg-raised text-primary">
-            <FileStack className="size-5" strokeWidth={1.75} />
-          </span>
+          <GlassPapers />
           <div className="space-y-1">
-            <p className="font-display text-xl text-fg">Drop a stack of paper</p>
+            <p className="font-display text-2xl text-ink">Drop a stack of paper</p>
             <p className="max-w-[34ch] text-sm text-muted">
               Photos, scans, PDFs, Word, or text. Reorder, rotate, then download one PDF.
             </p>
           </div>
-          <span className="mt-2 inline-flex h-11 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-fg">
+          <span className="btn-glass mt-3 inline-flex h-12 items-center rounded-full px-8 text-sm font-semibold">
             {busy === "add" ? "Reading…" : "Add files"}
           </span>
         </button>
@@ -183,5 +181,30 @@ export function ConvertView() {
         </button>
       )}
     </div>
+  );
+}
+
+function GlassPapers() {
+  return (
+    <svg className="glass-papers" viewBox="0 0 120 96" fill="none" aria-hidden>
+      <rect x="8" y="22" width="52" height="64" rx="10" fill="url(#p1)" stroke="rgba(255,255,255,.8)" />
+      <rect x="60" y="28" width="48" height="56" rx="10" fill="url(#p2)" stroke="rgba(255,255,255,.75)" />
+      <rect x="28" y="8" width="58" height="70" rx="11" fill="url(#p3)" stroke="rgba(255,255,255,.9)" />
+      <path d="M40 28h34M40 40h28M40 52h22" stroke="rgba(90,130,190,.35)" strokeWidth="3" strokeLinecap="round" />
+      <defs>
+        <linearGradient id="p1" x1="8" y1="22" x2="60" y2="86">
+          <stop stopColor="#9ec0ff" stopOpacity="0.85" />
+          <stop offset="1" stopColor="#cfe0ff" stopOpacity="0.5" />
+        </linearGradient>
+        <linearGradient id="p2" x1="60" y1="28" x2="108" y2="84">
+          <stop stopColor="#d7e6ff" stopOpacity="0.7" />
+          <stop offset="1" stopColor="#f4f8ff" stopOpacity="0.45" />
+        </linearGradient>
+        <linearGradient id="p3" x1="28" y1="8" x2="86" y2="78">
+          <stop stopColor="#ffffff" stopOpacity="0.92" />
+          <stop offset="1" stopColor="#c5d8f5" stopOpacity="0.55" />
+        </linearGradient>
+      </defs>
+    </svg>
   );
 }

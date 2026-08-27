@@ -23,7 +23,7 @@ export const Route = createRootRoute({
         name: "description",
         content: "Convert photos and documents to PDF, stamp a signature, and scan QR codes — all on this device.",
       },
-      { name: "theme-color", content: "#f4efe6" },
+      { name: "theme-color", content: "#eef2f7" },
       { property: "og:title", content: APP_NAME },
       {
         property: "og:description",
