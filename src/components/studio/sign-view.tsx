@@ -14,6 +14,7 @@ export function SignView() {
   const fileRef = useRef<HTMLInputElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
   const drawRef = useRef<HTMLCanvasElement>(null);
+  const drawBoxRef = useRef<HTMLDivElement>(null);
   const drawing = useRef(false);
   const [panel, setPanel] = useState<"none" | "photo" | "draw">("none");
   const [threshold, setThreshold] = useState(168);
@@ -53,6 +54,21 @@ export function SignView() {
       cancelled = true;
     };
   }, [panel, photoFile, threshold]);
+
+  useEffect(() => {
+    if (panel !== "draw") return;
+    const canvas = drawRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (canvas && ctx) {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    drawBoxRef.current?.scrollIntoView({
+      behavior: reduce ? "auto" : "smooth",
+      block: "center",
+    });
+  }, [panel]);
 
   function startDraw(event: React.PointerEvent<HTMLCanvasElement>) {
     const canvas = drawRef.current;
@@ -233,21 +249,7 @@ export function SignView() {
         <Button variant="secondary" size="sm" onClick={() => photoRef.current?.click()}>
           Photograph
         </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => {
-            setPanel("draw");
-            requestAnimationFrame(() => {
-              const canvas = drawRef.current;
-              if (!canvas) return;
-              const ctx = canvas.getContext("2d");
-              if (!ctx) return;
-              ctx.fillStyle = "#ffffff";
-              ctx.fillRect(0, 0, canvas.width, canvas.height);
-            });
-          }}
-        >
+        <Button variant="secondary" size="sm" onClick={() => setPanel("draw")}>
           Draw
         </Button>
       </div>
@@ -392,7 +394,7 @@ export function SignView() {
       ) : null}
 
       {panel === "draw" ? (
-        <div className="panel space-y-3 p-4">
+        <div ref={drawBoxRef} className="panel space-y-3 p-4">
           <p className="text-sm font-medium">Draw in ink</p>
           <canvas
             ref={drawRef}
