@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+.node_modules.lock
+
+# Build output
+dist/
+.output/
+.vercel/
+.tanstack/
+.nitro/
+.wrangler/
+
+# Local / sandbox only
+.grok/*
+!.grok/app-env.json
+AGENTS.md
+startup.sh
+screenshots/
+artifacts/
+*.log
+
+# Secrets (never commit)
+.env
+.env.*
+!.env.example

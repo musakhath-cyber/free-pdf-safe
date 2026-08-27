@@ -1,0 +1,87 @@
+import { useEffect, useRef } from "react";
+import { drawPageContent, loadImage, pagePixelSize } from "@/lib/pdf/canvas";
+import { PAGE_SIZES, type PageSizeId, type Stamp, type StudioPage } from "@/lib/pdf/types";
+import { cn } from "@/lib/utils";
+
+type PageFrameProps = {
+  page: StudioPage;
+  pageSize: PageSizeId;
+  stamps?: Stamp[];
+  selectedStampId?: string | null;
+  onPageClick?: (nx: number, ny: number) => void;
+  onStampPointerDown?: (stamp: Stamp, event: React.PointerEvent<HTMLButtonElement>) => void;
+  className?: string;
+  interactive?: boolean;
+};
+
+export function PageFrame({
+  page,
+  pageSize,
+  stamps = [],
+  selectedStampId,
+  onPageClick,
+  onStampPointerDown,
+  className,
+  interactive,
+}: PageFrameProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const spec = PAGE_SIZES[pageSize];
+  const pixels = pagePixelSize(pageSize);
+
+  useEffect(() => {
+    let cancelled = false;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.width = pixels.width;
+    canvas.height = pixels.height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    void loadImage(page.dataUrl).then((img) => {
+      if (cancelled) return;
+      drawPageContent(ctx, img, page, pixels.width, pixels.height, pageSize);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [page, pageSize, pixels.height, pixels.width]);
+
+  return (
+    <div
+      className={cn("page-sheet relative overflow-hidden bg-white", className)}
+      style={{ aspectRatio: `${spec.widthPt} / ${spec.heightPt}` }}
+    >
+      <canvas ref={canvasRef} className="absolute inset-0 size-full" />
+      {interactive ? (
+        <button
+          type="button"
+          aria-label="Place signature on page"
+          className="absolute inset-0"
+          onClick={(event) => {
+            const rect = event.currentTarget.getBoundingClientRect();
+            onPageClick?.((event.clientX - rect.left) / rect.width, (event.clientY - rect.top) / rect.height);
+          }}
+        />
+      ) : null}
+      {stamps.map((stamp) => (
+        <button
+          key={stamp.id}
+          type="button"
+          aria-label="Move signature"
+          className={cn(
+            "absolute cursor-grab touch-none overflow-hidden rounded-sm p-0",
+            selectedStampId === stamp.id ? "ring-2 ring-primary" : "ring-0",
+          )}
+          style={{
+            left: `${stamp.nx * 100}%`,
+            top: `${stamp.ny * 100}%`,
+            width: `${stamp.nw * 100}%`,
+            height: `${stamp.nh * 100}%`,
+          }}
+          onPointerDown={(event) => onStampPointerDown?.(stamp, event)}
+        >
+          <img src={stamp.dataUrl} alt="" className="pointer-events-none size-full object-contain" />
+        </button>
+      ))}
+    </div>
+  );
+}
