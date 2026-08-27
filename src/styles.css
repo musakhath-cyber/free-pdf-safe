@@ -89,11 +89,20 @@
 
 .wordmark {
   font-family: var(--font-display);
-  font-size: clamp(1.7rem, 1.3rem + 1.6vw, 2.15rem);
+  font-size: clamp(1.55rem, 1.2rem + 1.4vw, 2.05rem);
   font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.1;
   color: var(--color-fg);
+}
+
+.brand-mark {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 8px 18px rgb(28 25 22 / 10%);
 }
 
 .privacy-chip {
@@ -111,6 +120,16 @@
   text-transform: uppercase;
   display: inline-flex;
   align-items: center;
+}
+
+.studio-notice {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-raised);
+  border: 1px solid var(--color-border);
+  color: var(--color-fg);
+  font-size: 0.9375rem;
 }
 
 .nav-item {
@@ -195,6 +214,173 @@
   border: 1.5px solid rgb(247 243 236 / 80%);
   border-radius: 18px;
   box-shadow: 0 0 0 999px rgb(0 0 0 / 28%);
+}
+
+.auth-shell,
+.admin-shell {
+  min-height: 100dvh;
+  padding: 24px 20px calc(32px + env(safe-area-inset-bottom));
+  padding-top: max(24px, env(safe-area-inset-top));
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 35%), transparent 18%),
+    var(--color-bg);
+}
+
+.admin-shell {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.auth-card {
+  width: min(100%, 420px);
+  margin: 12vh auto 0;
+  padding: 24px;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 18px 40px rgb(28 25 22 / 6%);
+}
+
+.admin-header {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.email-form,
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.email-form {
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.form-kicker,
+.field span {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font: inherit;
+}
+
+.field textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.field input:focus,
+.field textarea:focus,
+.toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-primary) 25%, transparent);
+}
+
+.form-error {
+  color: var(--color-danger);
+  font-size: 0.875rem;
+}
+
+.text-link {
+  color: var(--color-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.toggle {
+  appearance: none;
+  width: 48px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--color-raised);
+  border: 1px solid var(--color-border);
+  position: relative;
+  transition: background-color var(--motion-quick) var(--ease-out);
+}
+
+.toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  box-shadow: 0 1px 2px rgb(28 25 22 / 16%);
+  transition: transform var(--motion-quick) var(--ease-out);
+}
+
+.toggle:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.toggle:checked::after {
+  transform: translateX(20px);
+}
+
+.ad-well {
+  margin-top: 20px;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--color-border);
+  background: var(--color-surface);
+  min-height: 90px;
+}
+
+.ad-placeholder {
+  display: grid;
+  min-height: 72px;
+  place-items: center;
+  color: var(--color-subtle);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ad-note,
+.owner-link {
+  margin-top: 8px;
+  color: var(--color-subtle);
+  font-size: 12px;
+}
+
+.owner-link a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 @media (prefers-reduced-motion: reduce) {

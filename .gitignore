@@ -17,6 +17,7 @@ AGENTS.md
 startup.sh
 screenshots/
 artifacts/
+attachments/
 *.log
 
 # Secrets (never commit)
