@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { BrandLockup } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import { GROK_PROVIDERS, authClient, authEnabled, signIn } from "@/lib/auth/client";
@@ -14,6 +14,15 @@ export const Route = createFileRoute("/login")({
   component: Login,
 });
 
+function brokerSignInAvailable(hostname: string): boolean {
+  return (
+    hostname.endsWith(".grok-sandbox.com") ||
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]"
+  );
+}
+
 function Login() {
   const { redirect } = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -22,6 +31,11 @@ function Login() {
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [showBroker, setShowBroker] = useState(false);
+
+  useEffect(() => {
+    setShowBroker(brokerSignInAvailable(window.location.hostname));
+  }, []);
 
   async function onEmailSubmit(event: FormEvent) {
     event.preventDefault();
@@ -34,10 +48,26 @@ function Login() {
         : await authClient.signIn.email(opts);
     setPending(false);
     if (result.error) {
-      setError(result.error.message ?? "Could not sign in.");
+      const message = result.error.message ?? "Could not sign in.";
+      setError(
+        message.toLowerCase().includes("invalid origin")
+          ? "This live address was not trusted yet. Refresh once the new version is up, then try again."
+          : message,
+      );
       return;
     }
     window.location.assign(redirect ?? "/");
+  }
+
+  async function onBroker(providerId: string) {
+    setError(null);
+    setPending(true);
+    try {
+      await signIn(providerId, { callbackURL: redirect });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not start sign-in.");
+      setPending(false);
+    }
   }
 
   return (
@@ -46,19 +76,26 @@ function Login() {
         <BrandLockup subtitle="Sign in to open the owner desk — ads, notices, and future studio knobs." />
         {authEnabled ? (
           <div className="mt-6 space-y-3">
-            {GROK_PROVIDERS.map((provider) => (
-              <Button
-                key={provider.providerId}
-                variant="secondary"
-                className="w-full"
-                onClick={() => signIn(provider.providerId, { callbackURL: redirect })}
-              >
-                Continue with {provider.label}
-              </Button>
-            ))}
+            {showBroker
+              ? GROK_PROVIDERS.map((provider) => (
+                  <Button
+                    key={provider.providerId}
+                    variant="secondary"
+                    className="w-full"
+                    disabled={pending}
+                    onClick={() => onBroker(provider.providerId)}
+                  >
+                    Continue with {provider.label}
+                  </Button>
+                ))
+              : (
+                <p className="form-kicker">
+                  On the live site, create an email account. The first account becomes the owner.
+                </p>
+              )}
             {emailAndPasswordEnabled ? (
               <form className="email-form" onSubmit={onEmailSubmit}>
-                <p className="form-kicker">Email and password</p>
+                {showBroker ? <p className="form-kicker">Email and password</p> : null}
                 {mode === "signup" ? (
                   <label className="field">
                     <span>Name</span>

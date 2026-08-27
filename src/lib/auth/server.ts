@@ -1,39 +1,8 @@
-/**
- * Self-hosted Better Auth for THIS app (server-only).
- *
- * Pre-wired for live preview + deploy — do not rewrite this file. To enable
- * local email/password, flip the flag in `./email-password` only (see auth skill).
- *
- * The app runs its own Better Auth at `/api/auth/*`, so the session cookie stays
- * on this app's own origin. Sign-in federates to the shared **Grok auth broker**
- * (`GROK_AUTH_ISSUER`) via the `genericOAuth` plugin — the broker brokers the
- * upstream sign-in methods (Google, X, …) and holds their shared secrets; this
- * app only holds its own client id/secret and names the upstream it wants via
- * each provider's `idp` hint.
- *
- * Tri-mode:
- *   - Deployed: the deployer injects a per-app `GROK_AUTH_*` + `BETTER_AUTH_URL`
- *     + `DATABASE_URL`, so real federated auth is persisted in Postgres.
- *   - Sandbox live preview: no injection -> falls back to the shared **preview
- *     client** (`./preview`) and derives the preview's `https://*.grok-sandbox.com`
- *     origin from the request, so real sign-in works (no demo users). Sessions
- *     and identities persist in the embedded PGLite DB (same DB as app data);
- *     the process restart wipes both. Live-preview iframe clients use a bearer
- *     token (partitioned cookies) — see `client.ts`.
- *   - Off (`VITE_AUTH_ENABLED=false`, the shipped default): no providers;
- *     `requireUserId` resolves a dev user with no database configured, and
- *     throws fail-closed once `DATABASE_URL` is set (see `verify.server.ts`).
- *
- * NEVER import this from client code — it pulls in `pg` + the preview secret +
- * server-only Better Auth internals. The client uses `@/lib/auth/client`;
- * components read the user via `@/lib/auth/use-current-user`; server functions get
- * a verified id via `@/lib/auth/middleware`.
- */
 import { betterAuth } from "better-auth";
 import { bearer, genericOAuth } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { getCookie } from "@tanstack/react-start/server";
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { Pool } from "pg";
 import { ensureDbReady, getPglite } from "../db";
 import { emailAndPasswordEnabled } from "./email-password";
@@ -70,6 +39,27 @@ const env = (key: string): string | undefined => {
   return value ? value : undefined;
 };
 
+/** Host-only value from a Vercel URL env (may already include https://). */
+function vercelHost(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  return value.replace(/^https?:\/\//, "").replace(/\/.*$/, "") || undefined;
+}
+
+/**
+ * Stable session secret on Vercel: BETTER_AUTH_SECRET if set, else a hash of
+ * this deployment id so every lambda of the same deploy signs the same way.
+ * Preview (no Vercel env) still uses the process-stable random secret.
+ */
+function sessionSecret(): string {
+  const explicit = env("BETTER_AUTH_SECRET");
+  if (explicit) return explicit;
+  const material = env("VERCEL_DEPLOYMENT_ID") ?? env("VERCEL_URL");
+  if (material) {
+    return createHash("sha256").update(`free-pdf-safe:${material}`).digest("hex");
+  }
+  return previewAuthSecret();
+}
+
 // Explicit off-switch. The deployer sets `VITE_AUTH_ENABLED=true` when it
 // provisions auth; set it to "false" to force auth off everywhere (dev user).
 const authDisabled = env("VITE_AUTH_ENABLED") === "false";
@@ -95,6 +85,20 @@ const explicitBaseURL = env("BETTER_AUTH_URL");
 // Explicit `string[]` (not a readonly tuple) — Better Auth's DynamicBaseURLConfig
 // requires a mutable `allowedHosts: string[]`.
 const previewAllowedHosts: string[] = [...PREVIEW_ALLOWED_HOSTS];
+// Live Vercel hosts — production aliases plus `*.vercel.app` so every deploy
+// URL (and the PE Sites team suffix) can sign in without BETTER_AUTH_URL.
+const VERCEL_ALLOWED_HOSTS: string[] = [
+  "*.vercel.app",
+  ...[
+    vercelHost(env("VERCEL_PROJECT_PRODUCTION_URL")),
+    vercelHost(env("VERCEL_URL")),
+    vercelHost(env("VERCEL_BRANCH_URL")),
+    "free-pdf-safe-app.vercel.app",
+    "free-pdf-safe-app-pe-sites.vercel.app",
+    "pdf-safe.vercel.app",
+    "pdf-safe-pe-sites.vercel.app",
+  ].filter((host): host is string => Boolean(host)),
+];
 // Local `npm run dev` (port 8080 contract). Browsers may send Origin as any of
 // these for the same server — trusting only `localhost` rejects `127.0.0.1` and
 // breaks email/password with "Invalid origin".
@@ -105,23 +109,40 @@ const LOCAL_DEV_ORIGINS: string[] = [
 ];
 const baseURL = explicitBaseURL ?? {
   // Include loopback hosts so dynamic baseURL resolves for local email/password
-  // (not only the preview wildcard).
-  allowedHosts: [...previewAllowedHosts, "localhost", "127.0.0.1", "[::1]"],
+  // (not only the preview wildcard). Include Vercel so the live site can too.
+  allowedHosts: [
+    ...previewAllowedHosts,
+    ...VERCEL_ALLOWED_HOSTS,
+    "localhost",
+    "127.0.0.1",
+    "[::1]",
+  ],
   // `auto` → trust both http:// and https:// expansions of allowedHosts
   // (preview is https; local dev is http).
   protocol: "auto" as const,
   fallback: "http://localhost:8080",
 };
 
+function originsForHosts(hosts: string[]): string[] {
+  return hosts.flatMap((host) => [`https://${host}`, `http://${host}`]);
+}
+
 // Origins Better Auth accepts on credentialed POSTs (sign-up/sign-in, etc.).
 // Missing entries here surface as FORBIDDEN "Invalid origin".
 const trustedOrigins: string[] = explicitBaseURL
-  ? [explicitBaseURL, ...LOCAL_DEV_ORIGINS]
+  ? [
+      explicitBaseURL,
+      ...LOCAL_DEV_ORIGINS,
+      ...VERCEL_ALLOWED_HOSTS,
+      ...originsForHosts(VERCEL_ALLOWED_HOSTS),
+    ]
   : [
       // Host wildcards (matched against Origin's host)
       ...previewAllowedHosts,
+      ...VERCEL_ALLOWED_HOSTS,
       // Full-origin wildcards (matched against Origin)
-      ...previewAllowedHosts.flatMap((host) => [`https://${host}`, `http://${host}`]),
+      ...originsForHosts(previewAllowedHosts),
+      ...originsForHosts(VERCEL_ALLOWED_HOSTS),
       ...LOCAL_DEV_ORIGINS,
     ];
 
@@ -176,7 +197,7 @@ export const auth = betterAuth({
   baseURL,
   // Deployed apps inject BETTER_AUTH_SECRET. Preview: process-stable secret on
   // globalThis so HMR doesn't invalidate PGLite-backed sessions (see above).
-  secret: env("BETTER_AUTH_SECRET") ?? previewAuthSecret(),
+  secret: sessionSecret(),
   database,
 
   // CSRF / origin check for credentialed auth POSTs (email sign-up/sign-in, …).
