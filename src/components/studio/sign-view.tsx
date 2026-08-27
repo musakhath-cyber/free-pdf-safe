@@ -246,10 +246,10 @@ export function SignView() {
       />
 
       <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" size="sm" onClick={() => photoRef.current?.click()}>
+        <Button onClick={() => photoRef.current?.click()}>
           Photograph
         </Button>
-        <Button variant="secondary" size="sm" onClick={() => setPanel("draw")}>
+        <Button onClick={() => setPanel("draw")}>
           Draw
         </Button>
       </div>
