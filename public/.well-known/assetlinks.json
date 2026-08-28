@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "online.freepdfsafe.app",
+    "sha256_cert_fingerprints": [
+      "50:95:D6:C6:74:5C:11:E5:DD:D1:4D:42:A1:20:9A:F4:1C:F3:C8:20:07:EB:55:53:60:49:E2:64:EA:83:FB:4A"
+    ]
+  }
+}]
