@@ -1,7 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BrandMark } from "@/components/brand/logo";
 
-export const Route = createFileRoute("/privacy")({ component: PrivacyPage });
+export const Route = createFileRoute("/privacy")({
+  component: PrivacyPage,
+  head: () => ({
+    meta: [
+      { title: "Privacy policy | Free PDF Safe" },
+      {
+        name: "description",
+        content: "How Free PDF Safe handles files, camera, ads, and accounts. Files stay on your device.",
+      },
+    ],
+    links: [{ rel: "canonical", href: "https://freepdfsafe.online/privacy" }],
+  }),
+});
 
 function PrivacyPage() {
   return (
