@@ -11,7 +11,8 @@
   --color-primary: #3d7dff;
   --color-primary-fg: #f7fbff;
   --color-border: rgb(255 255 255 / 72%);
-  --color-ink: #3f4a5c;
+  --color-ink: #0b2748;
+  --color-brand: #0b2748;
   --color-danger: #c45b55;
   --font-sans: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
   --font-display: Fraunces, Georgia, "Times New Roman", serif;
@@ -104,25 +105,34 @@
 
 .wordmark {
   font-family: var(--font-display);
-  font-size: clamp(1.55rem, 1.2rem + 1.4vw, 2.05rem);
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-  background: linear-gradient(180deg, #ffffff 10%, #c5d0de 55%, #8f9db0 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 1px 0 rgb(255 255 255 / 90%)) drop-shadow(0 8px 16px rgb(120 150 190 / 22%));
+  font-size: clamp(1.9rem, 1.4rem + 2.4vw, 2.6rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  color: var(--color-brand);
+  text-shadow: 0 1px 0 rgb(255 255 255 / 80%);
+}
+
+.wordmark-sub {
+  margin-top: 5px;
+  max-width: 36ch;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--color-fg);
 }
 
 .brand-mark {
-  width: 48px;
-  height: 48px;
+  width: 58px;
+  height: 58px;
   flex-shrink: 0;
-  border-radius: 16px;
+  border-radius: 18px;
   object-fit: cover;
-  background: transparent;
-  box-shadow: 0 10px 22px rgb(50 90 170 / 18%);
+  background: #fff;
+  border: 1.5px solid rgb(255 255 255 / 95%);
+  box-shadow:
+    0 0 0 1px rgb(11 39 72 / 10%),
+    0 12px 26px rgb(11 39 72 / 22%);
 }
 
 .privacy-chip {
@@ -262,6 +272,46 @@
 .admin-shell {
   max-width: 640px;
   margin: 0 auto;
+}
+
+.legal-shell {
+  min-height: 100dvh;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 20px calc(40px + env(safe-area-inset-bottom));
+  padding-top: max(24px, env(safe-area-inset-top));
+  background:
+    radial-gradient(1200px 480px at 50% -10%, rgb(255 255 255 / 80%), transparent 60%),
+    linear-gradient(180deg, #f7f9fc 0%, #e8eef6 100%);
+}
+
+.legal-prose {
+  display: grid;
+  gap: 12px;
+}
+
+.legal-prose h2 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: var(--color-ink);
+  margin-top: 6px;
+}
+
+.legal-prose p,
+.legal-prose li {
+  font-size: 0.975rem;
+  color: var(--color-fg);
+  line-height: 1.55;
+}
+
+.legal-prose ul {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: 8px;
 }
 
 .auth-card {

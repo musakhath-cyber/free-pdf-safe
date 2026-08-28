@@ -5,8 +5,8 @@ export function BrandMark({ className }: { className?: string }) {
     <img
       src="/logo.jpg"
       alt=""
-      width={40}
-      height={40}
+      width={58}
+      height={58}
       className={cn("brand-mark", className)}
     />
   );
@@ -14,11 +14,11 @@ export function BrandMark({ className }: { className?: string }) {
 
 export function BrandLockup({ subtitle }: { subtitle?: string }) {
   return (
-    <div className="flex items-start gap-3">
+    <div className="flex items-center gap-3.5">
       <BrandMark />
       <div className="min-w-0">
-        <p className="wordmark">Free PDF Safe</p>
-        {subtitle ? <p className="mt-1 max-w-[32ch] text-sm text-muted">{subtitle}</p> : null}
+        <h1 className="wordmark">Free PDF Safe</h1>
+        {subtitle ? <p className="wordmark-sub">{subtitle}</p> : null}
       </div>
     </div>
   );

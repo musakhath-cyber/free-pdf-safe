@@ -146,6 +146,9 @@ function Login() {
         <Link to="/" className="text-link mt-6 inline-block">
           Back to the studio
         </Link>
+        <p className="owner-link">
+          <Link to="/privacy">Privacy</Link>
+        </p>
       </div>
     </main>
   );

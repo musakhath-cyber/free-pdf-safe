@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 import { AdSlot } from "@/components/ads/ad-slot";
 import { BrandLockup } from "@/components/brand/logo";
+import { InstallLink } from "@/components/pwa/register";
 import { getPublicSettings, type PublicSiteSettings } from "@/lib/site-settings";
 import type { StudioMode } from "@/lib/pdf/types";
 import { cn } from "@/lib/utils";
@@ -58,6 +59,9 @@ export function StudioApp() {
         {mode === "scan" ? <ScanView /> : null}
         <AdSlot settings={settings} />
         <p className="owner-link">
+          <InstallLink />
+          <Link to="/privacy">Privacy</Link>
+          {" · "}
           <Link to="/admin">Owner desk</Link>
         </p>
       </main>
