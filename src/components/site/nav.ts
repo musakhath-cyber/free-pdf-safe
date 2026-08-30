@@ -9,4 +9,5 @@ export const SITE_NAV = [
 export const SITE_FOOTER = [
   ...SITE_NAV,
   { to: "/terms", label: "Terms" },
+  { to: "/admin", label: "Owner’s Desk" },
 ] as const;

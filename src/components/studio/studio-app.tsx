@@ -80,8 +80,6 @@ export function StudioApp() {
           <Link to="/privacy">Privacy</Link>
           {" · "}
           <Link to="/faq">FAQ</Link>
-          {" · "}
-          <Link to="/admin">Owner’s Desk</Link>
         </p>
       </main>
 
