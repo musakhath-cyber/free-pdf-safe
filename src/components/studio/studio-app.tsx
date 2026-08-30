@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 import { AdSlot } from "@/components/ads/ad-slot";
 import { HelpFab } from "@/components/site/help-fab";
+import { HeroVideo } from "@/components/site/hero-video";
 import { HomeSections } from "@/components/site/home-sections";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
@@ -50,20 +51,23 @@ export function StudioApp() {
     <div className="studio-shell">
       <SiteHeader />
       <div className="studio-hero">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="site-kicker">freepdfsafe.online</p>
-            <h1 className="hero-title">A PDF studio that never uploads.</h1>
-            <p className="hero-lede">{settings.tagline}</p>
+        <div className="hero-copy">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="site-kicker">freepdfsafe.online</p>
+              <h1 className="hero-title">A PDF studio that never uploads.</h1>
+              <p className="hero-lede">{settings.tagline}</p>
+            </div>
+            <span className="privacy-chip">On this device</span>
           </div>
-          <span className="privacy-chip">On this device</span>
+          <ul className="hero-chips">
+            <li>No account</li>
+            <li>Stays in this tab</li>
+            <li>Convert · Sign · Scan</li>
+          </ul>
+          {settings.siteNotice ? <p className="studio-notice">{settings.siteNotice}</p> : null}
         </div>
-        <ul className="hero-chips">
-          <li>No account</li>
-          <li>Stays in this tab</li>
-          <li>Convert · Sign · Scan</li>
-        </ul>
-        {settings.siteNotice ? <p className="studio-notice">{settings.siteNotice}</p> : null}
+        <HeroVideo />
       </div>
 
       <main id="studio" className="studio-main">

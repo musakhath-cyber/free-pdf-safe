@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { assemblePdf, pdfFilename } from "@/lib/pdf/assemble";
 import { ingestFiles, makeSampleLetter } from "@/lib/pdf/ingest";
 import { liftInkFromDataUrl, liftInkFromFile } from "@/lib/pdf/signature";
+import { bytesToPdfFile, canSharePdf, sharePdfFile } from "@/lib/pdf/share";
 import type { Stamp } from "@/lib/pdf/types";
-import { downloadBytes, uid } from "@/lib/utils";
+import { downloadBlob, uid } from "@/lib/utils";
 import { useStudio } from "@/store/studio";
 import { PageFrame } from "./page-frame";
+import { SharePdfButton } from "./share-pdf-button";
 
 export function SignView() {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -22,6 +24,7 @@ export function SignView() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [size, setSize] = useState(0.28);
+  const [lastPdf, setLastPdf] = useState<File | null>(null);
 
   const {
     pages,
@@ -210,7 +213,22 @@ export function SignView() {
     setBusy("pdf");
     try {
       const bytes = await assemblePdf(pages, pageSize, stamps);
-      downloadBytes(pdfFilename("signed"), bytes, "application/pdf");
+      const file = bytesToPdfFile(pdfFilename("signed"), bytes);
+      downloadBlob(file.name, file);
+      setLastPdf(file);
+      toast.success("Signed PDF saved on this device.", {
+        action: canSharePdf(file)
+          ? {
+              label: "Share",
+              onClick: () => {
+                void sharePdfFile(file).then((result) => {
+                  if (result === "shared") toast.success("Shared with a link to Free PDF Safe.");
+                  if (result === "copied") toast.success("App link copied.");
+                });
+              },
+            }
+          : undefined,
+      });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not build the PDF.");
     } finally {
@@ -430,10 +448,13 @@ export function SignView() {
       ) : null}
 
       {pages.length > 0 ? (
-        <Button onClick={() => void download()} disabled={busy !== null}>
-          {busy === "pdf" ? <Loader2 className="animate-spin" /> : null}
-          Download signed PDF
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button className="flex-1" onClick={() => void download()} disabled={busy !== null}>
+            {busy === "pdf" ? <Loader2 className="animate-spin" /> : null}
+            Download signed PDF
+          </Button>
+          <SharePdfButton file={lastPdf} />
+        </div>
       ) : null}
     </div>
   );

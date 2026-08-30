@@ -4,13 +4,16 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { assemblePdf, pdfFilename } from "@/lib/pdf/assemble";
 import { ingestFiles } from "@/lib/pdf/ingest";
-import { downloadBytes } from "@/lib/utils";
+import { bytesToPdfFile, canSharePdf, sharePdfFile } from "@/lib/pdf/share";
+import { downloadBlob } from "@/lib/utils";
 import { useStudio } from "@/store/studio";
 import { PageFrame } from "./page-frame";
+import { SharePdfButton } from "./share-pdf-button";
 
 export function ConvertView() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<"add" | "pdf" | null>(null);
+  const [lastPdf, setLastPdf] = useState<File | null>(null);
   const { pages, pageSize, setPageSize, addPages, removePage, rotatePage, movePage, clearPages, setMode } =
     useStudio();
   const preview = pages[0];
@@ -36,11 +39,23 @@ export function ConvertView() {
     setBusy("pdf");
     try {
       const bytes = await assemblePdf(pages, pageSize);
-      downloadBytes(
-        pdfFilename(pages.length === 1 ? pages[0].name.replace(/\.[^.]+$/, "") : "free-pdf-safe"),
-        bytes,
-        "application/pdf",
-      );
+      const name = pdfFilename(pages.length === 1 ? pages[0].name.replace(/\.[^.]+$/, "") : "free-pdf-safe");
+      const file = bytesToPdfFile(name, bytes);
+      downloadBlob(file.name, file);
+      setLastPdf(file);
+      toast.success("PDF saved on this device.", {
+        action: canSharePdf(file)
+          ? {
+              label: "Share",
+              onClick: () => {
+                void sharePdfFile(file).then((result) => {
+                  if (result === "shared") toast.success("Shared with a link to Free PDF Safe.");
+                  if (result === "copied") toast.success("App link copied.");
+                });
+              },
+            }
+          : undefined,
+      });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not build the PDF.");
     } finally {
@@ -167,6 +182,7 @@ export function ConvertView() {
             {busy === "pdf" ? <Loader2 className="animate-spin" /> : null}
             Download PDF
           </Button>
+          <SharePdfButton file={lastPdf} />
           <Button variant="secondary" className="flex-1" onClick={() => setMode("sign")}>
             Sign this
           </Button>
