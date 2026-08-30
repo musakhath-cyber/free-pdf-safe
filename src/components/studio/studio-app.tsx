@@ -3,7 +3,10 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 import { AdSlot } from "@/components/ads/ad-slot";
-import { BrandLockup } from "@/components/brand/logo";
+import { HelpFab } from "@/components/site/help-fab";
+import { HomeSections } from "@/components/site/home-sections";
+import { SiteFooter } from "@/components/site/site-footer";
+import { SiteHeader } from "@/components/site/site-header";
 import { InstallLink } from "@/components/pwa/register";
 import { getPublicSettings, type PublicSiteSettings } from "@/lib/site-settings";
 import type { StudioMode } from "@/lib/pdf/types";
@@ -45,15 +48,25 @@ export function StudioApp() {
 
   return (
     <div className="studio-shell">
-      <header className="studio-header">
+      <SiteHeader />
+      <div className="studio-hero">
         <div className="flex items-start justify-between gap-4">
-          <BrandLockup subtitle={settings.tagline} />
+          <div>
+            <p className="site-kicker">freepdfsafe.online</p>
+            <h1 className="hero-title">A PDF studio that never uploads.</h1>
+            <p className="hero-lede">{settings.tagline}</p>
+          </div>
           <span className="privacy-chip">On this device</span>
         </div>
+        <ul className="hero-chips">
+          <li>No account</li>
+          <li>Stays in this tab</li>
+          <li>Convert · Sign · Scan</li>
+        </ul>
         {settings.siteNotice ? <p className="studio-notice">{settings.siteNotice}</p> : null}
-      </header>
+      </div>
 
-      <main className="studio-main">
+      <main id="studio" className="studio-main">
         {mode === "convert" ? <ConvertView /> : null}
         {mode === "sign" ? <SignView /> : null}
         {mode === "scan" ? <ScanView /> : null}
@@ -62,9 +75,14 @@ export function StudioApp() {
           <InstallLink />
           <Link to="/privacy">Privacy</Link>
           {" · "}
-          <Link to="/admin">Owner desk</Link>
+          <Link to="/faq">FAQ</Link>
+          {" · "}
+          <Link to="/admin">Owner’s Desk</Link>
         </p>
       </main>
+
+      <HomeSections />
+      <SiteFooter />
 
       <nav className="studio-nav" aria-label="Studio">
         {NAV.map((item) => {
@@ -76,7 +94,6 @@ export function StudioApp() {
               type="button"
               onClick={() => setMode(item.id)}
               className={cn("nav-item", on && "is-on")}
-              aria-current={on ? "page" : undefined}
             >
               <Icon className="size-5" strokeWidth={1.75} />
               {item.label}
@@ -84,6 +101,7 @@ export function StudioApp() {
           );
         })}
       </nav>
+      <HelpFab />
       <Toaster position="top-center" theme="light" />
     </div>
   );

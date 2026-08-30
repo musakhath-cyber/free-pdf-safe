@@ -10,9 +10,15 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as DeskRouteImport } from './routes/desk'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as HowRouteImport } from './routes/how'
+import { Route as LimitationsRouteImport } from './routes/limitations'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -20,9 +26,34 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeskRoute = DeskRouteImport.update({
+  id: '/desk',
+  path: '/desk',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowRoute = HowRouteImport.update({
+  id: '/how',
+  path: '/how',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LimitationsRoute = LimitationsRouteImport.update({
+  id: '/limitations',
+  path: '/limitations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -35,6 +66,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -43,39 +79,97 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
+  '/desk': typeof DeskRoute
+  '/faq': typeof FaqRoute
+  '/how': typeof HowRoute
+  '/limitations': typeof LimitationsRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
+  '/desk': typeof DeskRoute
+  '/faq': typeof FaqRoute
+  '/how': typeof HowRoute
+  '/limitations': typeof LimitationsRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
+  '/desk': typeof DeskRoute
+  '/faq': typeof FaqRoute
+  '/how': typeof HowRoute
+  '/limitations': typeof LimitationsRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/login' | '/privacy' | '/api/auth/$'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/admin'
+    | '/desk'
+    | '/faq'
+    | '/how'
+    | '/limitations'
+    | '/login'
+    | '/privacy'
+    | '/terms'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/login' | '/privacy' | '/api/auth/$'
-  id: '__root__' | '/' | '/admin' | '/login' | '/privacy' | '/api/auth/$'
+  to:
+    | '/'
+    | '/about'
+    | '/admin'
+    | '/desk'
+    | '/faq'
+    | '/how'
+    | '/limitations'
+    | '/login'
+    | '/privacy'
+    | '/terms'
+    | '/api/auth/$'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/admin'
+    | '/desk'
+    | '/faq'
+    | '/how'
+    | '/limitations'
+    | '/login'
+    | '/privacy'
+    | '/terms'
+    | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRoute
+  DeskRoute: typeof DeskRoute
+  FaqRoute: typeof FaqRoute
+  HowRoute: typeof HowRoute
+  LimitationsRoute: typeof LimitationsRoute
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
+  TermsRoute: typeof TermsRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -88,11 +182,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/desk': {
+      id: '/desk'
+      path: '/desk'
+      fullPath: '/desk'
+      preLoaderRoute: typeof DeskRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how': {
+      id: '/how'
+      path: '/how'
+      fullPath: '/how'
+      preLoaderRoute: typeof HowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/limitations': {
+      id: '/limitations'
+      path: '/limitations'
+      fullPath: '/limitations'
+      preLoaderRoute: typeof LimitationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -109,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -121,9 +257,15 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   AdminRoute: AdminRoute,
+  DeskRoute: DeskRoute,
+  FaqRoute: FaqRoute,
+  HowRoute: HowRoute,
+  LimitationsRoute: LimitationsRoute,
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
+  TermsRoute: TermsRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

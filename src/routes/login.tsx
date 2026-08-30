@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { type FormEvent, useEffect, useState } from "react";
 import { BrandLockup } from "@/components/brand/logo";
+import { SiteHeader } from "@/components/site/site-header";
 import { Button } from "@/components/ui/button";
 import { GROK_PROVIDERS, authClient, authEnabled, signIn } from "@/lib/auth/client";
 import { emailAndPasswordEnabled } from "@/lib/auth/email-password";
@@ -71,9 +72,11 @@ function Login() {
   }
 
   return (
-    <main className="auth-shell">
+    <div className="site-page">
+      <SiteHeader />
+      <main className="auth-shell">
       <div className="auth-card">
-        <BrandLockup subtitle="Sign in to open the owner desk — ads, notices, and future studio knobs." />
+        <BrandLockup subtitle="Convert, Sign, and Scan stay free. Sign in with email only to open the Owner’s Desk — ads, notices, and public copy." />
         {authEnabled ? (
           <div className="mt-6 space-y-3">
             {showBroker
@@ -151,5 +154,6 @@ function Login() {
         </p>
       </div>
     </main>
+    </div>
   );
 }
