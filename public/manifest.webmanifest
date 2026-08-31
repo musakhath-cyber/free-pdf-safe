@@ -2,10 +2,11 @@
   "name": "Free PDF Safe",
   "short_name": "PDF Safe",
   "description": "Convert photos and docs to PDF, stamp a signature, and scan QR codes — privately on this device.",
-  "id": "/",
+  "id": "https://freepdfsafe.online/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "any",
   "background_color": "#eef2f7",
   "theme_color": "#eef2f7",
@@ -28,5 +29,12 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "related_applications": [
+    {
+      "platform": "play",
+      "id": "online.freepdfsafe.app"
+    }
+  ],
+  "prefer_related_applications": false
 }
