@@ -8,6 +8,7 @@ import { bytesToPdfFile, canSharePdf, sharePdfFile } from "@/lib/pdf/share";
 import { downloadBlob } from "@/lib/utils";
 import { useStudio } from "@/store/studio";
 import { PageFrame } from "./page-frame";
+import { PrintPdfButton } from "./print-pdf-button";
 import { SharePdfButton } from "./share-pdf-button";
 
 export function ConvertView() {
@@ -34,15 +35,30 @@ export function ConvertView() {
     }
   }
 
+  async function buildPdf() {
+    const bytes = await assemblePdf(pages, pageSize);
+    const name = pdfFilename(pages.length === 1 ? pages[0].name.replace(/\.[^.]+$/, "") : "free-pdf-safe");
+    const file = bytesToPdfFile(name, bytes);
+    setLastPdf(file);
+    return file;
+  }
+
+  async function ensurePdf() {
+    if (lastPdf) return lastPdf;
+    setBusy("pdf");
+    try {
+      return await buildPdf();
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function download() {
     if (!pages.length) return;
     setBusy("pdf");
     try {
-      const bytes = await assemblePdf(pages, pageSize);
-      const name = pdfFilename(pages.length === 1 ? pages[0].name.replace(/\.[^.]+$/, "") : "free-pdf-safe");
-      const file = bytesToPdfFile(name, bytes);
+      const file = await buildPdf();
       downloadBlob(file.name, file);
-      setLastPdf(file);
       toast.success("PDF saved on this device.", {
         action: canSharePdf(file)
           ? {
@@ -177,13 +193,14 @@ export function ConvertView() {
       </div>
 
       {pages.length > 0 ? (
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button className="flex-1" onClick={() => void download()} disabled={busy !== null}>
+        <div className="flex flex-col gap-2">
+          <Button className="w-full" onClick={() => void download()} disabled={busy !== null}>
             {busy === "pdf" ? <Loader2 className="animate-spin" /> : null}
             Download PDF
           </Button>
-          <SharePdfButton file={lastPdf} />
-          <Button variant="secondary" className="flex-1" onClick={() => setMode("sign")}>
+          <SharePdfButton file={lastPdf} disabled={busy !== null} onNeedFile={ensurePdf} />
+          <PrintPdfButton file={lastPdf} disabled={busy !== null} onNeedFile={ensurePdf} />
+          <Button variant="secondary" className="w-full" onClick={() => setMode("sign")}>
             Sign this
           </Button>
         </div>

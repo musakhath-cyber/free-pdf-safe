@@ -3,13 +3,23 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { canSharePdf, sharePdfFile } from "@/lib/pdf/share";
 
-export function SharePdfButton({ file }: { file: File | null }) {
-  if (!file) return null;
-
+export function SharePdfButton({
+  file,
+  disabled,
+  onNeedFile,
+}: {
+  file: File | null;
+  disabled?: boolean;
+  onNeedFile?: () => Promise<File | null>;
+}) {
   async function onShare() {
-    if (!file) return;
     try {
-      const result = await sharePdfFile(file);
+      const next = file ?? (onNeedFile ? await onNeedFile() : null);
+      if (!next) {
+        toast.error("Build the PDF first.");
+        return;
+      }
+      const result = await sharePdfFile(next);
       if (result === "copied") toast.success("App link copied. Attach the PDF from Downloads.");
       else if (result === "shared") toast.success("Shared with a link back to Free PDF Safe.");
     } catch {
@@ -18,9 +28,9 @@ export function SharePdfButton({ file }: { file: File | null }) {
   }
 
   return (
-    <Button variant="secondary" className="flex-1" onClick={() => void onShare()}>
+    <Button variant="secondary" className="w-full" disabled={disabled} onClick={() => void onShare()}>
       <Share2 className="size-4" />
-      {canSharePdf(file) ? "Share PDF" : "Copy app link"}
+      {file && !canSharePdf(file) ? "Copy app link" : "Share PDF"}
     </Button>
   );
 }
