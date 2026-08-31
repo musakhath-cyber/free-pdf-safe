@@ -53,6 +53,13 @@ export const Route = createRootRoute({
     <html lang="en-ZA" className="antialiased" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script async src="https://plausible.io/js/pa-7vdfJRpi29HHk_i8jagPk.js" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              'window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};if(location.hostname==="freepdfsafe.online")plausible.init()',
+          }}
+        />
       </head>
       <body className="bg-bg text-fg">
         <PreviewHostBridge />
