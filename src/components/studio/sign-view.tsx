@@ -353,11 +353,15 @@ export function SignView() {
               }
             }}
             onStampPointerDown={onStampPointerDown}
+            onStampCommit={() => {
+              selectStamp(null);
+              toast.success("Signature committed.");
+            }}
             className="mx-auto w-full max-w-[360px]"
           />
           <p className="text-center text-sm text-muted">
             {active
-              ? "Press Stamp on page, drag the blue box, then tap outside it to commit."
+              ? "Press Stamp on page, drag the blue box, then double-tap the signature or tap outside it to commit."
               : "Save a signature, then press Stamp on page."}
           </p>
           {pages.length > 0 ? (

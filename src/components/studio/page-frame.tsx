@@ -10,6 +10,7 @@ type PageFrameProps = {
   selectedStampId?: string | null;
   onPageClick?: (nx: number, ny: number) => void;
   onStampPointerDown?: (stamp: Stamp, event: React.PointerEvent<HTMLButtonElement>) => void;
+  onStampCommit?: (stamp: Stamp) => void;
   className?: string;
   interactive?: boolean;
 };
@@ -21,10 +22,12 @@ export function PageFrame({
   selectedStampId,
   onPageClick,
   onStampPointerDown,
+  onStampCommit,
   className,
   interactive,
 }: PageFrameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const lastStampTap = useRef<{ id: string; at: number } | null>(null);
   const spec = PAGE_SIZES[pageSize];
   const pixels = pagePixelSize(pageSize);
 
@@ -44,6 +47,11 @@ export function PageFrame({
       cancelled = true;
     };
   }, [page, pageSize, pixels.height, pixels.width]);
+
+  function commitStamp(stamp: Stamp) {
+    lastStampTap.current = null;
+    onStampCommit?.(stamp);
+  }
 
   return (
     <div
@@ -68,7 +76,7 @@ export function PageFrame({
         <button
           key={stamp.id}
           type="button"
-          aria-label="Move signature"
+          aria-label="Move or double-tap to commit signature"
           className={cn(
             "absolute z-20 cursor-grab touch-none overflow-hidden rounded-sm p-0",
             selectedStampId === stamp.id ? "ring-2 ring-primary" : "ring-0",
@@ -83,7 +91,21 @@ export function PageFrame({
             event.stopPropagation();
             onStampPointerDown?.(stamp, event);
           }}
-          onPointerUp={(event) => event.stopPropagation()}
+          onPointerUp={(event) => {
+            event.stopPropagation();
+            const now = Date.now();
+            const last = lastStampTap.current;
+            if (last && last.id === stamp.id && now - last.at < 420) {
+              commitStamp(stamp);
+              return;
+            }
+            lastStampTap.current = { id: stamp.id, at: now };
+          }}
+          onDoubleClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            commitStamp(stamp);
+          }}
         >
           <img src={stamp.dataUrl} alt="" className="pointer-events-none size-full object-contain" />
         </button>
