@@ -14,6 +14,7 @@ export function PageFilmstrip() {
     timer: number;
   } | null>(null);
   const lastTapRef = useRef<{ id: string; at: number } | null>(null);
+  const [liftId, setLiftId] = useState<string | null>(null);
   const pages = useStudio((state) => state.pages);
   const pageSize = useStudio((state) => state.pageSize);
   const activePageId = useStudio((state) => state.activePageId);
