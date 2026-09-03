@@ -185,6 +185,7 @@ export function SignView() {
       nw,
       nh,
     });
+    toast.success("Stamped. Drag it to the right spot.");
   }
 
   function onStampPointerDown(stamp: Stamp, event: React.PointerEvent<HTMLButtonElement>) {
@@ -290,7 +291,7 @@ export function SignView() {
         ref={storageRef}
         type="file"
         className="hidden"
-        accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/heic,image/heif,image/svg+xml,application/pdf,.jpg,.jpeg,.png,.webp,.gif,.bmp,.heic,.heif,.svg,.pdf"
+        accept="image/*,application/pdf,.jpg,.jpeg,.png,.webp,.gif,.bmp,.heic,.svg,.pdf"
         onChange={(event) => {
           const file = event.target.files?.[0];
           event.target.value = "";
@@ -346,6 +347,11 @@ export function SignView() {
           <p className="text-center text-sm text-muted">
             {active ? "Tap the page to stamp, then drag." : "Save a signature, then tap the page."}
           </p>
+          {active ? (
+            <Button className="w-full" variant="secondary" onClick={() => placeStamp(0.62, 0.78)}>
+              Stamp on page
+            </Button>
+          ) : null}
         </div>
       )}
 
@@ -382,6 +388,9 @@ export function SignView() {
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-medium text-fg">Signatures on this device</h2>
+          <Button variant="ghost" size="sm" onClick={() => storageRef.current?.click()}>
+            From files
+          </Button>
         </div>
         {signatures.length === 0 ? (
           <p className="text-sm text-muted">

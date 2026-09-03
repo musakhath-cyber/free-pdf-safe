@@ -50,13 +50,15 @@ export function PageFrame({
       className={cn("page-sheet relative overflow-hidden bg-white", className)}
       style={{ aspectRatio: `${spec.widthPt} / ${spec.heightPt}` }}
     >
-      <canvas ref={canvasRef} className="absolute inset-0 size-full" />
+      <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 size-full" />
       {interactive ? (
-        <button
-          type="button"
+        <div
+          role="button"
+          tabIndex={0}
           aria-label="Place signature on page"
-          className="absolute inset-0"
-          onClick={(event) => {
+          className="absolute inset-0 z-10 touch-manipulation"
+          onPointerUp={(event) => {
+            if (event.button !== 0) return;
             const rect = event.currentTarget.getBoundingClientRect();
             onPageClick?.((event.clientX - rect.left) / rect.width, (event.clientY - rect.top) / rect.height);
           }}
@@ -68,7 +70,7 @@ export function PageFrame({
           type="button"
           aria-label="Move signature"
           className={cn(
-            "absolute cursor-grab touch-none overflow-hidden rounded-sm p-0",
+            "absolute z-20 cursor-grab touch-none overflow-hidden rounded-sm p-0",
             selectedStampId === stamp.id ? "ring-2 ring-primary" : "ring-0",
           )}
           style={{
@@ -77,7 +79,11 @@ export function PageFrame({
             width: `${stamp.nw * 100}%`,
             height: `${stamp.nh * 100}%`,
           }}
-          onPointerDown={(event) => onStampPointerDown?.(stamp, event)}
+          onPointerDown={(event) => {
+            event.stopPropagation();
+            onStampPointerDown?.(stamp, event);
+          }}
+          onPointerUp={(event) => event.stopPropagation()}
         >
           <img src={stamp.dataUrl} alt="" className="pointer-events-none size-full object-contain" />
         </button>
