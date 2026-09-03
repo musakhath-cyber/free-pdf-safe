@@ -16,7 +16,7 @@ const FAQS = [
   },
   {
     q: "Which files can I drop?",
-    a: "JPEG, PNG, WebP, PDF, Word, and plain text on Convert. Sign works on a page in the studio. Scan reads a QR code from the camera or a photo.",
+    a: "JPEG, PNG, WebP, PDF, Word, and plain text on Convert. Sign can load a signature from Files as JPEG, PNG, WebP, GIF, BMP, SVG, or PDF, or you can photograph ink or draw it. Scan reads a QR code from the camera or a photo.",
   },
   {
     q: "Do I have to leave this site?",

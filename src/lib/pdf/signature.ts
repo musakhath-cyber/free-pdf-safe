@@ -65,35 +65,90 @@ export function liftInkFromCanvas(source: HTMLCanvasElement, threshold: number):
   return cropped;
 }
 
-export async function liftInkFromFile(file: File, threshold: number): Promise<string> {
-  const bitmap = await createImageBitmap(file);
-  const maxEdge = 1600;
-  const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
+function fitCanvas(width: number, height: number, maxEdge = 1600) {
+  const scale = Math.min(1, maxEdge / Math.max(width, height, 1));
   const canvas = document.createElement("canvas");
-  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas is not available.");
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-  return canvasToPng(liftInkFromCanvas(canvas, threshold));
+  canvas.width = Math.max(1, Math.round(width * scale));
+  canvas.height = Math.max(1, Math.round(height * scale));
+  return canvas;
 }
 
-export async function liftInkFromDataUrl(dataUrl: string, threshold: number): Promise<string> {
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  await new Promise<void>((resolve, reject) => {
-    img.onload = () => resolve();
-    img.onerror = () => reject(new Error("Could not read the drawing."));
-    img.src = dataUrl;
-  });
-  const canvas = document.createElement("canvas");
-  canvas.width = img.naturalWidth || 1;
-  canvas.height = img.naturalHeight || 1;
+async function rasterizePdfFirstPage(file: File) {
+  const pdfjs = await import("pdfjs-dist");
+  const worker = await import("pdfjs-dist/build/pdf.worker.min.mjs?url");
+  pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
+  const data = new Uint8Array(await file.arrayBuffer());
+  const doc = await pdfjs.getDocument({ data, useSystemFonts: true }).promise;
+  const page = await doc.getPage(1);
+  const viewport = page.getViewport({ scale: 2 });
+  const canvas = fitCanvas(viewport.width, viewport.height);
+  const scale = canvas.width / viewport.width;
+  const fitted = page.getViewport({ scale: 2 * scale });
+  canvas.width = Math.max(1, Math.round(fitted.width));
+  canvas.height = Math.max(1, Math.round(fitted.height));
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas is not available.");
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(img, 0, 0);
+  await page.render({ canvasContext: ctx, viewport: fitted, canvas }).promise;
+  return canvas;
+}
+
+async function bitmapToCanvas(bitmap: ImageBitmap) {
+  const canvas = fitCanvas(bitmap.width, bitmap.height);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas is not available.");
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  return canvas;
+}
+
+async function imageUrlToCanvas(url: string) {
+  const img = new Image();
+  img.decoding = "async";
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error("Could not read that file as an image."));
+    img.src = url;
+  });
+  const canvas = fitCanvas(img.naturalWidth || 1, img.naturalHeight || 1);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas is not available.");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas;
+}
+
+export async function fileToInkCanvas(file: File) {
+  const name = file.name.toLowerCase();
+  const type = file.type;
+  if (type === "application/pdf" || name.endsWith(".pdf")) {
+    return rasterizePdfFirstPage(file);
+  }
+  try {
+    return await bitmapToCanvas(await createImageBitmap(file));
+  } catch {
+    const url = URL.createObjectURL(file);
+    try {
+      return await imageUrlToCanvas(url);
+    } catch {
+      if (/\.(heic|heif)$/i.test(name) || type.includes("heic") || type.includes("heif")) {
+        throw new Error("This phone could not read HEIC. Save it as JPEG or PNG, or take a screenshot.");
+      }
+      throw new Error("Use a JPEG, PNG, WebP, GIF, BMP, SVG, or PDF of the signature.");
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+}
+
+export async function liftInkFromFile(file: File, threshold: number): Promise<string> {
+  const canvas = await fileToInkCanvas(file);
+  return canvasToPng(liftInkFromCanvas(canvas, threshold));
+}
+
+export async function liftInkFromDataUrl(dataUrl: string, threshold: number): Promise<string> {
+  const canvas = await imageUrlToCanvas(dataUrl);
   return canvasToPng(liftInkFromCanvas(canvas, threshold));
 }

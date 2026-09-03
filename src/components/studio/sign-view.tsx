@@ -16,6 +16,7 @@ import { SharePdfButton } from "./share-pdf-button";
 export function SignView() {
   const fileRef = useRef<HTMLInputElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
+  const storageRef = useRef<HTMLInputElement>(null);
   const drawRef = useRef<HTMLCanvasElement>(null);
   const drawBoxRef = useRef<HTMLDivElement>(null);
   const drawing = useRef(false);
@@ -51,9 +52,15 @@ export function SignView() {
   useEffect(() => {
     if (panel !== "photo" || !photoFile) return;
     let cancelled = false;
-    void liftInkFromFile(photoFile, threshold).then((url) => {
-      if (!cancelled) setPreview(url);
-    });
+    void liftInkFromFile(photoFile, threshold)
+      .then((url) => {
+        if (!cancelled) setPreview(url);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setPreview(null);
+        toast.error(error instanceof Error ? error.message : "Could not read that signature file.");
+      });
     return () => {
       cancelled = true;
     };
@@ -275,15 +282,31 @@ export function SignView() {
           event.target.value = "";
           if (!file) return;
           setPhotoFile(file);
+          setPreview(null);
+          setPanel("photo");
+        }}
+      />
+      <input
+        ref={storageRef}
+        type="file"
+        className="hidden"
+        accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/heic,image/heif,image/svg+xml,application/pdf,.jpg,.jpeg,.png,.webp,.gif,.bmp,.heic,.heif,.svg,.pdf"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = "";
+          if (!file) return;
+          setPhotoFile(file);
+          setPreview(null);
           setPanel("photo");
         }}
       />
 
       <div className="flex flex-wrap gap-2">
-        <Button onClick={() => photoRef.current?.click()}>
+        <Button onClick={() => storageRef.current?.click()}>From files</Button>
+        <Button variant="secondary" onClick={() => photoRef.current?.click()}>
           Photograph
         </Button>
-        <Button onClick={() => setPanel("draw")}>
+        <Button variant="secondary" onClick={() => setPanel("draw")}>
           Draw
         </Button>
       </div>
@@ -361,7 +384,10 @@ export function SignView() {
           <h2 className="text-sm font-medium text-fg">Signatures on this device</h2>
         </div>
         {signatures.length === 0 ? (
-          <p className="text-sm text-muted">Photograph ink on paper, or draw with your finger. The white is lifted off.</p>
+          <p className="text-sm text-muted">
+            Load a signature from Files (JPEG, PNG, WebP, GIF, BMP, SVG, or PDF), photograph ink on paper, or draw with
+            your finger. The white is lifted off.
+          </p>
         ) : (
           <div className="-mx-5 flex gap-2 overflow-x-auto px-5">
             {signatures.map((item) => (
@@ -396,7 +422,7 @@ export function SignView() {
               <img src={preview} alt="Lifted signature" className="max-h-24 max-w-full object-contain" />
             </div>
           ) : (
-            <p className="text-sm text-muted">Reading the photograph…</p>
+            <p className="text-sm text-muted">Reading the file…</p>
           )}
           <label className="flex items-center gap-3 text-sm text-muted">
             Threshold
