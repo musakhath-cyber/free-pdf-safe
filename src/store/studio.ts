@@ -1,3 +1,4 @@
+import { create } from "zustand";
 import { loadScans, loadSignatures, saveScans, saveSignatures } from "@/lib/pdf/storage";
 import type { PageSizeId, ScanRecord, SignatureAsset, Stamp, StudioMode, StudioPage } from "@/lib/pdf/types";
 
