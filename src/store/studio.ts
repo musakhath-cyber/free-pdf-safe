@@ -1,6 +1,14 @@
-import { create } from "zustand";
 import { loadScans, loadSignatures, saveScans, saveSignatures } from "@/lib/pdf/storage";
 import type { PageSizeId, ScanRecord, SignatureAsset, Stamp, StudioMode, StudioPage } from "@/lib/pdf/types";
+
+type Snapshot = {
+  pages: StudioPage[];
+  stamps: Stamp[];
+  activePageId: string | null;
+  signatures: SignatureAsset[];
+  activeSignatureId: string | null;
+  selectedStampId: string | null;
+};
 
 type StudioState = {
   hydrated: boolean;
@@ -10,16 +18,23 @@ type StudioState = {
   signatures: SignatureAsset[];
   stamps: Stamp[];
   scans: ScanRecord[];
+  activePageId: string | null;
   activeSignatureId: string | null;
   selectedStampId: string | null;
+  undoStack: Snapshot[];
   hydrate: () => void;
   setMode: (mode: StudioMode) => void;
   setPageSize: (pageSize: PageSizeId) => void;
+  setActivePageId: (id: string | null) => void;
+  beginHistory: () => void;
+  undo: () => void;
   addPages: (pages: StudioPage[]) => void;
   removePage: (id: string) => void;
   rotatePage: (id: string) => void;
   movePage: (id: string, dir: -1 | 1) => void;
+  reorderPages: (from: number, to: number) => void;
   clearPages: () => void;
+  cancelWork: () => void;
   addSignature: (signature: SignatureAsset) => void;
   removeSignature: (id: string) => void;
   setActiveSignature: (id: string | null) => void;
@@ -31,6 +46,17 @@ type StudioState = {
   removeScan: (id: string) => void;
 };
 
+function shot(state: StudioState): Snapshot {
+  return {
+    pages: state.pages,
+    stamps: state.stamps,
+    activePageId: state.activePageId,
+    signatures: state.signatures,
+    activeSignatureId: state.activeSignatureId,
+    selectedStampId: state.selectedStampId,
+  };
+}
+
 export const useStudio = create<StudioState>((set, get) => ({
   hydrated: false,
   mode: "convert",
@@ -39,8 +65,10 @@ export const useStudio = create<StudioState>((set, get) => ({
   signatures: [],
   stamps: [],
   scans: [],
+  activePageId: null,
   activeSignatureId: null,
   selectedStampId: null,
+  undoStack: [],
   hydrate: () => {
     if (get().hydrated) return;
     const signatures = loadSignatures();
@@ -53,27 +81,61 @@ export const useStudio = create<StudioState>((set, get) => ({
   },
   setMode: (mode) => set({ mode }),
   setPageSize: (pageSize) => set({ pageSize }),
-  addPages: (pages) =>
+  setActivePageId: (id) => set({ activePageId: id, selectedStampId: null }),
+  beginHistory: () => {
+    const state = get();
+    set({ undoStack: [...state.undoStack, shot(state)].slice(-40) });
+  },
+  undo: () => {
+    const stack = get().undoStack;
+    if (!stack.length) return;
+    const prev = stack[stack.length - 1];
+    saveSignatures(prev.signatures);
+    set({
+      undoStack: stack.slice(0, -1),
+      pages: prev.pages,
+      stamps: prev.stamps,
+      activePageId: prev.activePageId,
+      signatures: prev.signatures,
+      activeSignatureId: prev.activeSignatureId,
+      selectedStampId: prev.selectedStampId,
+    });
+  },
+  addPages: (pages) => {
+    get().beginHistory();
     set((state) => ({
       pages: [...state.pages, ...pages].slice(0, 40),
-    })),
-  removePage: (id) =>
-    set((state) => ({
-      pages: state.pages.filter((page) => page.id !== id),
-      stamps: state.stamps.filter((stamp) => stamp.pageId !== id),
-      selectedStampId: state.stamps.find((stamp) => stamp.id === state.selectedStampId)?.pageId === id
-        ? null
-        : state.selectedStampId,
-    })),
-  rotatePage: (id) =>
+      activePageId: state.activePageId ?? pages[0]?.id ?? null,
+    }));
+  },
+  removePage: (id) => {
+    get().beginHistory();
+    set((state) => {
+      const index = state.pages.findIndex((page) => page.id === id);
+      const pages = state.pages.filter((page) => page.id !== id);
+      const neighbor = pages[index] ?? pages[index - 1] ?? null;
+      return {
+        pages,
+        stamps: state.stamps.filter((stamp) => stamp.pageId !== id),
+        activePageId: state.activePageId === id ? (neighbor?.id ?? null) : state.activePageId,
+        selectedStampId: state.stamps.find((stamp) => stamp.id === state.selectedStampId)?.pageId === id
+          ? null
+          : state.selectedStampId,
+      };
+    });
+  },
+  rotatePage: (id) => {
+    get().beginHistory();
     set((state) => ({
       pages: state.pages.map((page) =>
         page.id === id
           ? { ...page, rotation: ((page.rotation + 90) % 360) as StudioPage["rotation"] }
           : page,
       ),
-    })),
-  movePage: (id, dir) =>
+    }));
+  },
+  movePage: (id, dir) => {
+    get().beginHistory();
     set((state) => {
       const index = state.pages.findIndex((page) => page.id === id);
       const next = index + dir;
@@ -82,14 +144,36 @@ export const useStudio = create<StudioState>((set, get) => ({
       const [item] = pages.splice(index, 1);
       pages.splice(next, 0, item);
       return { pages };
+    });
+  },
+  reorderPages: (from, to) => {
+    set((state) => {
+      if (from === to || from < 0 || to < 0 || from >= state.pages.length || to >= state.pages.length) {
+        return state;
+      }
+      const pages = [...state.pages];
+      const [item] = pages.splice(from, 1);
+      pages.splice(to, 0, item);
+      return { pages };
+    });
+  },
+  clearPages: () => set({ pages: [], stamps: [], selectedStampId: null, activePageId: null }),
+  cancelWork: () =>
+    set({
+      pages: [],
+      stamps: [],
+      selectedStampId: null,
+      activePageId: null,
+      undoStack: [],
     }),
-  clearPages: () => set({ pages: [], stamps: [], selectedStampId: null }),
   addSignature: (signature) => {
+    get().beginHistory();
     const signatures = [signature, ...get().signatures].slice(0, 12);
     saveSignatures(signatures);
     set({ signatures, activeSignatureId: signature.id });
   },
   removeSignature: (id) => {
+    get().beginHistory();
     const signatures = get().signatures.filter((item) => item.id !== id);
     saveSignatures(signatures);
     set({
@@ -98,16 +182,21 @@ export const useStudio = create<StudioState>((set, get) => ({
     });
   },
   setActiveSignature: (id) => set({ activeSignatureId: id, selectedStampId: null }),
-  addStamp: (stamp) => set((state) => ({ stamps: [...state.stamps, stamp], selectedStampId: stamp.id })),
+  addStamp: (stamp) => {
+    get().beginHistory();
+    set((state) => ({ stamps: [...state.stamps, stamp], selectedStampId: stamp.id }));
+  },
   updateStamp: (id, patch) =>
     set((state) => ({
       stamps: state.stamps.map((stamp) => (stamp.id === id ? { ...stamp, ...patch } : stamp)),
     })),
-  removeStamp: (id) =>
+  removeStamp: (id) => {
+    get().beginHistory();
     set((state) => ({
       stamps: state.stamps.filter((stamp) => stamp.id !== id),
       selectedStampId: state.selectedStampId === id ? null : state.selectedStampId,
-    })),
+    }));
+  },
   selectStamp: (id) => set({ selectedStampId: id }),
   addScan: (scan) => {
     const scans = [scan, ...get().scans.filter((item) => item.text !== scan.text)].slice(0, 20);

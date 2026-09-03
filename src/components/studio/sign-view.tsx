@@ -9,6 +9,8 @@ import { bytesToPdfFile, canSharePdf, sharePdfFile } from "@/lib/pdf/share";
 import type { Stamp } from "@/lib/pdf/types";
 import { downloadBlob, uid } from "@/lib/utils";
 import { useStudio } from "@/store/studio";
+import { EditorBar } from "./editor-bar";
+import { PageFilmstrip } from "./page-filmstrip";
 import { PageFrame } from "./page-frame";
 import { PrintPdfButton } from "./print-pdf-button";
 import { SharePdfButton } from "./share-pdf-button";
@@ -32,6 +34,7 @@ export function SignView() {
     pages,
     pageSize,
     addPages,
+    activePageId,
     signatures,
     addSignature,
     removeSignature,
@@ -43,10 +46,11 @@ export function SignView() {
     removeStamp,
     selectedStampId,
     selectStamp,
+    beginHistory,
   } = useStudio();
 
   const active = signatures.find((item) => item.id === activeSignatureId) ?? signatures[0] ?? null;
-  const currentPage = pages[0];
+  const currentPage = pages.find((page) => page.id === activePageId) ?? pages[0];
   const pageStamps = stamps.filter((stamp) => stamp.pageId === currentPage?.id);
 
   useEffect(() => {
@@ -191,6 +195,7 @@ export function SignView() {
   function onStampPointerDown(stamp: Stamp, event: React.PointerEvent<HTMLButtonElement>) {
     event.preventDefault();
     event.stopPropagation();
+    beginHistory();
     selectStamp(stamp.id);
     const target = event.currentTarget.parentElement;
     if (!target) return;
@@ -334,6 +339,7 @@ export function SignView() {
         </div>
       ) : (
         <div className="space-y-3">
+          <EditorBar />
           <PageFrame
             page={currentPage}
             pageSize={pageSize}
@@ -351,6 +357,10 @@ export function SignView() {
             <Button className="w-full" variant="secondary" onClick={() => placeStamp(0.62, 0.78)}>
               Stamp on page
             </Button>
+          ) : null}
+          <PageFilmstrip />
+          {pages.length > 1 ? (
+            <p className="text-center text-[12px] text-subtle">Tap a page to open it. Hold, then drag to reorder.</p>
           ) : null}
         </div>
       )}

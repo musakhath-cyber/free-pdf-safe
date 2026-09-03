@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Loader2, RotateCw, Trash2 } from "lucide-react";
+import { Loader2, RotateCw, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { ingestFiles } from "@/lib/pdf/ingest";
 import { bytesToPdfFile, canSharePdf, sharePdfFile } from "@/lib/pdf/share";
 import { downloadBlob } from "@/lib/utils";
 import { useStudio } from "@/store/studio";
+import { EditorBar } from "./editor-bar";
+import { PageFilmstrip } from "./page-filmstrip";
 import { PageFrame } from "./page-frame";
 import { PrintPdfButton } from "./print-pdf-button";
 import { SharePdfButton } from "./share-pdf-button";
@@ -15,14 +17,21 @@ export function ConvertView() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<"add" | "pdf" | null>(null);
   const [lastPdf, setLastPdf] = useState<File | null>(null);
-  const { pages, pageSize, setPageSize, addPages, removePage, rotatePage, movePage, clearPages, setMode } =
-    useStudio();
-  const preview = pages[0];
+  const pages = useStudio((state) => state.pages);
+  const pageSize = useStudio((state) => state.pageSize);
+  const setPageSize = useStudio((state) => state.setPageSize);
+  const addPages = useStudio((state) => state.addPages);
+  const removePage = useStudio((state) => state.removePage);
+  const rotatePage = useStudio((state) => state.rotatePage);
+  const activePageId = useStudio((state) => state.activePageId);
+  const setMode = useStudio((state) => state.setMode);
+  const preview = pages.find((page) => page.id === activePageId) ?? pages[0];
 
   async function onFiles(list: FileList | File[]) {
     const files = Array.from(list);
     if (files.length === 0) return;
     setBusy("add");
+    setLastPdf(null);
     try {
       const { pages: next, skipped } = await ingestFiles(files, pageSize);
       if (next.length) addPages(next);
@@ -117,54 +126,32 @@ export function ConvertView() {
         </button>
       ) : (
         <div className="space-y-4">
+          <EditorBar />
           {preview ? (
             <PageFrame page={preview} pageSize={pageSize} className="mx-auto w-full max-w-[360px]" />
           ) : null}
-
-          <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
-            {pages.map((page, index) => (
-              <div key={page.id} className="w-[92px] shrink-0 space-y-1.5">
-                <PageFrame page={page} pageSize={pageSize} className="w-full" />
-                <div className="flex items-center justify-between gap-0.5">
-                  <span className="tabular-nums text-[11px] text-subtle">{index + 1}</span>
-                  <div className="flex">
-                    <button
-                      type="button"
-                      className="flex size-8 items-center justify-center text-muted"
-                      aria-label="Move earlier"
-                      onClick={() => movePage(page.id, -1)}
-                    >
-                      <ChevronLeft className="size-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      className="flex size-8 items-center justify-center text-muted"
-                      aria-label="Rotate"
-                      onClick={() => rotatePage(page.id)}
-                    >
-                      <RotateCw className="size-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      className="flex size-8 items-center justify-center text-muted"
-                      aria-label="Move later"
-                      onClick={() => movePage(page.id, 1)}
-                    >
-                      <ChevronRight className="size-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      className="flex size-8 items-center justify-center text-danger"
-                      aria-label="Remove page"
-                      onClick={() => removePage(page.id)}
-                    >
-                      <Trash2 className="size-3.5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          {preview ? (
+            <div className="flex items-center justify-center gap-1">
+              <button
+                type="button"
+                className="flex size-10 items-center justify-center text-muted"
+                aria-label="Rotate page"
+                onClick={() => rotatePage(preview.id)}
+              >
+                <RotateCw className="size-4" />
+              </button>
+              <button
+                type="button"
+                className="flex size-10 items-center justify-center text-danger"
+                aria-label="Remove page"
+                onClick={() => removePage(preview.id)}
+              >
+                <Trash2 className="size-4" />
+              </button>
+            </div>
+          ) : null}
+          <PageFilmstrip />
+          <p className="text-center text-[12px] text-subtle">Tap a page to open it. Hold, then drag to reorder.</p>
         </div>
       )}
 
@@ -185,11 +172,6 @@ export function ConvertView() {
           {busy === "add" ? <Loader2 className="animate-spin" /> : null}
           Add files
         </Button>
-        {pages.length > 0 ? (
-          <Button variant="ghost" onClick={() => clearPages()}>
-            Clear
-          </Button>
-        ) : null}
       </div>
 
       {pages.length > 0 ? (
