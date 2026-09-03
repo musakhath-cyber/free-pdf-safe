@@ -175,7 +175,7 @@ export function SignView() {
 
   function placeStamp(nx: number, ny: number) {
     if (!currentPage || !active) {
-      toast.error("Save a signature first, then tap the page.");
+      toast.error("Save a signature first, then press Stamp on page.");
       return;
     }
     const nw = size;
@@ -346,12 +346,19 @@ export function SignView() {
             stamps={pageStamps}
             selectedStampId={selectedStampId}
             interactive
-            onPageClick={placeStamp}
+            onPageClick={() => {
+              if (selectedStampId) {
+                selectStamp(null);
+                toast.success("Signature committed.");
+              }
+            }}
             onStampPointerDown={onStampPointerDown}
             className="mx-auto w-full max-w-[360px]"
           />
           <p className="text-center text-sm text-muted">
-            {active ? "Tap the page to stamp, then drag." : "Save a signature, then tap the page."}
+            {active
+              ? "Press Stamp on page, drag the blue box, then tap outside it to commit."
+              : "Save a signature, then press Stamp on page."}
           </p>
           {pages.length > 0 ? (
             <div className="flex items-center gap-3">
@@ -384,7 +391,7 @@ export function SignView() {
           ) : null}
           <PageFilmstrip />
           {pages.length > 1 ? (
-            <p className="text-center text-[12px] text-subtle">Tap a page to open it. Hold, then drag to reorder.</p>
+            <p className="text-center text-[12px] text-subtle">Double-tap a page to open it. Hold, then drag to reorder.</p>
           ) : null}
           {active ? (
             <Button className="w-full" variant="secondary" onClick={() => placeStamp(0.62, 0.78)}>

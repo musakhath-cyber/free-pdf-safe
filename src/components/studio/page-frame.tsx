@@ -55,7 +55,7 @@ export function PageFrame({
         <div
           role="button"
           tabIndex={0}
-          aria-label="Place signature on page"
+          aria-label="Commit signature"
           className="absolute inset-0 z-10 touch-manipulation"
           onPointerUp={(event) => {
             if (event.button !== 0) return;

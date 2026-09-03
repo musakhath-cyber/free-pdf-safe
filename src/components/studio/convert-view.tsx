@@ -151,7 +151,7 @@ export function ConvertView() {
             </div>
           ) : null}
           <PageFilmstrip />
-          <p className="text-center text-[12px] text-subtle">Tap a page to open it. Hold, then drag to reorder.</p>
+          <p className="text-center text-[12px] text-subtle">Double-tap a page to open it. Hold, then drag to reorder.</p>
         </div>
       )}
 

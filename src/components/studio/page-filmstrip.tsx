@@ -13,7 +13,7 @@ export function PageFilmstrip() {
     dragging: boolean;
     timer: number;
   } | null>(null);
-  const [liftId, setLiftId] = useState<string | null>(null);
+  const lastTapRef = useRef<{ id: string; at: number } | null>(null);
   const pages = useStudio((state) => state.pages);
   const pageSize = useStudio((state) => state.pageSize);
   const activePageId = useStudio((state) => state.activePageId);
@@ -76,7 +76,16 @@ export function PageFilmstrip() {
   function onPointerUp() {
     const drag = dragRef.current;
     clearTimer();
-    if (drag && !drag.dragging) setActivePageId(drag.id);
+    if (drag && !drag.dragging) {
+      const now = Date.now();
+      const last = lastTapRef.current;
+      if (last && last.id === drag.id && now - last.at < 420) {
+        setActivePageId(drag.id);
+        lastTapRef.current = null;
+      } else {
+        lastTapRef.current = { id: drag.id, at: now };
+      }
+    }
     dragRef.current = null;
     setLiftId(null);
   }
