@@ -353,47 +353,46 @@ export function SignView() {
           <p className="text-center text-sm text-muted">
             {active ? "Tap the page to stamp, then drag." : "Save a signature, then tap the page."}
           </p>
-          {active ? (
-            <Button className="w-full" variant="secondary" onClick={() => placeStamp(0.62, 0.78)}>
-              Stamp on page
-            </Button>
+          {pages.length > 0 ? (
+            <div className="flex items-center gap-3">
+              <label className="text-sm text-muted" htmlFor="stamp-size">
+                Size
+              </label>
+              <input
+                id="stamp-size"
+                type="range"
+                min={0.14}
+                max={0.5}
+                step={0.01}
+                value={size}
+                onChange={(event) => {
+                  const next = Number(event.target.value);
+                  setSize(next);
+                  if (selectedStampId) {
+                    const stamp = stamps.find((item) => item.id === selectedStampId);
+                    if (stamp) updateStamp(stamp.id, { nw: next, nh: next * 0.38 });
+                  }
+                }}
+                className="range flex-1"
+              />
+              {selectedStampId ? (
+                <Button variant="ghost" size="icon-sm" aria-label="Remove stamp" onClick={() => removeStamp(selectedStampId)}>
+                  <Trash2 />
+                </Button>
+              ) : null}
+            </div>
           ) : null}
           <PageFilmstrip />
           {pages.length > 1 ? (
             <p className="text-center text-[12px] text-subtle">Tap a page to open it. Hold, then drag to reorder.</p>
           ) : null}
-        </div>
-      )}
-
-      {pages.length > 0 ? (
-        <div className="flex items-center gap-3">
-          <label className="text-sm text-muted" htmlFor="stamp-size">
-            Size
-          </label>
-          <input
-            id="stamp-size"
-            type="range"
-            min={0.14}
-            max={0.5}
-            step={0.01}
-            value={size}
-            onChange={(event) => {
-              const next = Number(event.target.value);
-              setSize(next);
-              if (selectedStampId) {
-                const stamp = stamps.find((item) => item.id === selectedStampId);
-                if (stamp) updateStamp(stamp.id, { nw: next, nh: next * 0.38 });
-              }
-            }}
-            className="range flex-1"
-          />
-          {selectedStampId ? (
-            <Button variant="ghost" size="icon-sm" aria-label="Remove stamp" onClick={() => removeStamp(selectedStampId)}>
-              <Trash2 />
+          {active ? (
+            <Button className="w-full" variant="secondary" onClick={() => placeStamp(0.62, 0.78)}>
+              Stamp on page
             </Button>
           ) : null}
         </div>
-      ) : null}
+      )}
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3">
