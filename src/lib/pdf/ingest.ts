@@ -15,6 +15,20 @@ function isDocx(file: File) {
   );
 }
 
+function isSpreadsheet(file: File) {
+  const name = file.name.toLowerCase();
+  return (
+    name.endsWith(".xlsx") ||
+    name.endsWith(".xlsm") ||
+    name.endsWith(".xls") ||
+    name.endsWith(".csv") ||
+    file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+    file.type === "application/vnd.ms-excel" ||
+    file.type === "text/csv" ||
+    file.type === "application/csv"
+  );
+}
+
 function isText(file: File) {
   return file.type === "text/plain" || file.name.toLowerCase().endsWith(".txt");
 }
@@ -32,11 +46,14 @@ export function describeUnsupported(file: File) {
   if (name.endsWith(".doc") && !name.endsWith(".docx")) {
     return `${file.name} is an old Word file. Save it as .docx and try again.`;
   }
-  return `${file.name} is not a photo, PDF, Word, or text file.`;
+  if (name.endsWith(".xlsb") || name.endsWith(".ods")) {
+    return `${file.name} needs to be saved as .xlsx or .csv first.`;
+  }
+  return `${file.name} is not a photo, PDF, Word, Excel, or text file.`;
 }
 
 export function canIngest(file: File) {
-  return isPdf(file) || isDocx(file) || isText(file) || isImage(file);
+  return isPdf(file) || isDocx(file) || isText(file) || isSpreadsheet(file) || isImage(file);
 }
 
 async function loadPdfjs() {
@@ -200,6 +217,137 @@ async function ingestText(file: File, size: PageSizeId): Promise<StudioPage[]> {
   return rasterizeTextPages(text, file.name, size);
 }
 
+function cellText(value: unknown) {
+  if (value == null || value === "") return "";
+  if (value instanceof Date) {
+    return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(value);
+  }
+  return String(value).replace(/\s+/g, " ").trim();
+}
+
+function fitLabel(ctx: CanvasRenderingContext2D, text: string, maxWidth: number) {
+  if (ctx.measureText(text).width <= maxWidth) return text;
+  let slice = text;
+  while (slice.length > 1 && ctx.measureText(`${slice}…`).width > maxWidth) {
+    slice = slice.slice(0, -1);
+  }
+  return slice.length ? `${slice}…` : "";
+}
+
+async function rasterizeTablePages(
+  rows: string[][],
+  name: string,
+  size: PageSizeId,
+  heading: string,
+): Promise<StudioPage[]> {
+  const { width, height } = pagePixelSize(size);
+  const margin = Math.round(width * 0.06);
+  const tableW = width - margin * 2;
+  const colCount = Math.min(16, Math.max(1, ...rows.map((row) => row.length), 1));
+  const trimmed = rows
+    .map((row) => {
+      const next = row.slice(0, colCount).map((cell) => cell ?? "");
+      while (next.length < colCount) next.push("");
+      return next;
+    })
+    .filter((row) => row.some((cell) => cell.length > 0));
+  const data = trimmed.length ? trimmed : [Array.from({ length: colCount }, () => "")];
+
+  const samples = data.slice(0, 80);
+  const rawWidths = Array.from({ length: colCount }, (_, col) => {
+    let longest = 4;
+    for (const row of samples) {
+      longest = Math.max(longest, (row[col] ?? "").length);
+    }
+    return Math.min(28, Math.max(6, longest));
+  });
+  const totalUnits = rawWidths.reduce((sum, w) => sum + w, 0) || colCount;
+  const colWidths = rawWidths.map((w) => Math.max(36, (w / totalUnits) * tableW));
+  const scale = tableW / colWidths.reduce((sum, w) => sum + w, 0);
+  const widths = colWidths.map((w) => w * scale);
+
+  const fontSize = Math.max(11, Math.min(15, Math.round(width * 0.022)));
+  const rowH = Math.round(fontSize * 1.7);
+  const titleSize = Math.round(width * 0.032);
+  const titleBlock = Math.round(titleSize * 1.8);
+  const usable = height - margin * 2 - titleBlock;
+  const rowsPerPage = Math.max(8, Math.floor(usable / rowH));
+  const pages: StudioPage[] = [];
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas is not available.");
+
+  for (let start = 0; start < data.length && pages.length < 40; start += rowsPerPage) {
+    const chunk = data.slice(start, start + rowsPerPage);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = "#0b2748";
+    ctx.font = `600 ${titleSize}px Fraunces, Georgia, serif`;
+    ctx.fillText(fitLabel(ctx, heading, tableW), margin, margin + titleSize);
+
+    let y = margin + titleBlock;
+    chunk.forEach((row, rowIndex) => {
+      const isHeader = start === 0 && rowIndex === 0;
+      if (isHeader) {
+        ctx.fillStyle = "#eef2f7";
+        ctx.fillRect(margin, y, tableW, rowH);
+      }
+      ctx.strokeStyle = "rgba(11, 39, 72, 0.12)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(margin, y, tableW, rowH);
+      let x = margin;
+      ctx.font = `${isHeader ? 600 : 400} ${fontSize}px "Source Sans 3", system-ui, sans-serif`;
+      ctx.fillStyle = "#1c1916";
+      ctx.textBaseline = "middle";
+      for (let c = 0; c < colCount; c += 1) {
+        ctx.strokeRect(x, y, widths[c], rowH);
+        const label = fitLabel(ctx, row[c] ?? "", widths[c] - 10);
+        ctx.fillText(label, x + 5, y + rowH / 2);
+        x += widths[c];
+      }
+      y += rowH;
+    });
+
+    const index = pages.length + 1;
+    pages.push({
+      id: uid(),
+      name: `${name} · ${index}`,
+      dataUrl: await canvasToJpeg(canvas, 0.92),
+      width,
+      height,
+      rotation: 0,
+      marginPt: 0,
+    });
+  }
+  return pages;
+}
+
+async function ingestSpreadsheet(file: File, size: PageSizeId): Promise<StudioPage[]> {
+  const mod = await import("xlsx");
+  const XLSX = (mod as { default?: typeof import("xlsx") }).default ?? mod;
+  const wb = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
+  if (!wb.SheetNames.length) throw new Error(`${file.name} has no sheets.`);
+  const pages: StudioPage[] = [];
+  for (const sheetName of wb.SheetNames) {
+    if (pages.length >= 40) break;
+    const sheet = wb.Sheets[sheetName];
+    if (!sheet) continue;
+    const rows = (XLSX.utils.sheet_to_json(sheet, {
+      header: 1,
+      raw: false,
+      defval: "",
+      blankrows: false,
+    }) as unknown[][]).map((row) => row.map((cell) => cellText(cell)));
+    if (!rows.length) continue;
+    const heading = wb.SheetNames.length > 1 ? `${file.name} · ${sheetName}` : file.name;
+    pages.push(...(await rasterizeTablePages(rows, heading, size, heading)));
+  }
+  if (!pages.length) throw new Error(`${file.name} has no readable cells.`);
+  return pages.slice(0, 40);
+}
+
 export async function ingestFiles(files: File[], size: PageSizeId): Promise<{
   pages: StudioPage[];
   skipped: string[];
@@ -210,6 +358,7 @@ export async function ingestFiles(files: File[], size: PageSizeId): Promise<{
     try {
       if (isPdf(file)) pages.push(...(await ingestPdf(file)));
       else if (isDocx(file)) pages.push(...(await ingestDocx(file, size)));
+      else if (isSpreadsheet(file)) pages.push(...(await ingestSpreadsheet(file, size)));
       else if (isText(file)) pages.push(...(await ingestText(file, size)));
       else if (isImage(file)) pages.push(await ingestImage(file, size));
       else skipped.push(describeUnsupported(file));
@@ -236,7 +385,7 @@ export async function makeSampleLetter(size: PageSizeId): Promise<StudioPage[]> 
     "",
     "This is a sample letter. Photograph a signature on paper, or draw one with your finger, then stamp it below. The file never leaves this device — conversion, ink cleanup, and the finished PDF all run in the browser.",
     "",
-    "Use Convert to add your own photos, scans, PDFs, or Word files. Use Scan to read a QR code with the camera.",
+    "Use Convert to add your own photos, scans, PDFs, Word, or Excel files. Use Scan to read a QR code with the camera.",
     "",
     "Yours sincerely,",
     "",

@@ -95,7 +95,7 @@ export function ConvertView() {
         type="file"
         className="hidden"
         multiple
-        accept="image/jpeg,image/png,image/webp,application/pdf,.pdf,.docx,.txt,text/plain"
+        accept="image/jpeg,image/png,image/webp,application/pdf,.pdf,.docx,.txt,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,.xlsx,.xls,.csv"
         onChange={(event) => {
           if (event.target.files) void onFiles(event.target.files);
           event.target.value = "";
@@ -117,7 +117,7 @@ export function ConvertView() {
           <div className="space-y-1">
             <p className="font-display text-2xl text-ink">Drop a stack of paper</p>
             <p className="max-w-[34ch] text-sm text-muted">
-              Photos, scans, PDFs, Word, or text. Reorder, rotate, then download one PDF.
+              Photos, scans, PDFs, Word, Excel, or text. Reorder, rotate, then download one PDF.
             </p>
           </div>
           <span className="btn-glass mt-3 inline-flex h-12 items-center rounded-full px-8 text-sm font-semibold">

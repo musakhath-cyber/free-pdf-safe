@@ -271,7 +271,7 @@ export function SignView() {
         ref={fileRef}
         type="file"
         className="hidden"
-        accept="image/jpeg,image/png,image/webp,application/pdf,.pdf,.docx,.txt,text/plain"
+        accept="image/jpeg,image/png,image/webp,application/pdf,.pdf,.docx,.txt,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,.xlsx,.xls,.csv"
         onChange={(event) => {
           void loadDocument(event.target.files);
           event.target.value = "";

@@ -14,7 +14,7 @@ export function HomeSections() {
               <FileStack className="size-5" />
             </span>
             <h3 className="step-title">Drop a stack</h3>
-            <p className="step-copy">Photos, scans, PDFs, Word, or text. Reorder and rotate in this tab.</p>
+            <p className="step-copy">Photos, scans, PDFs, Word, Excel, or text. Reorder and rotate in this tab.</p>
           </article>
           <article className="surface-card">
             <p className="step-num">02</p>
@@ -46,7 +46,7 @@ export function HomeSections() {
         <ul className="cap-grid">
           <li className="surface-card px-5 py-4">
             <p className="font-medium text-ink">Convert</p>
-            <p className="mt-1 text-sm text-muted">JPEG, PNG, WebP, PDF, Word, and text into one document.</p>
+            <p className="mt-1 text-sm text-muted">JPEG, PNG, WebP, PDF, Word, Excel, and text into one document.</p>
           </li>
           <li className="surface-card px-5 py-4">
             <p className="font-medium text-ink">Sign</p>

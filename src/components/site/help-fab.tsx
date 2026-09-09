@@ -5,7 +5,7 @@ import { useState } from "react";
 const HINTS = [
   { q: "Do files leave this phone?", a: "No. Convert, Sign, and Scan run in this tab." },
   { q: "Do I need an account?", a: "No. Accounts are only for the Owner’s Desk." },
-  { q: "What can I drop?", a: "Photos, PDFs, Word, and text. Then download one PDF." },
+  { q: "What can I drop?", a: "Photos, PDFs, Word, Excel, and text. Then download one PDF." },
 ];
 
 export function HelpFab() {

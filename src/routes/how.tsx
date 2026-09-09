@@ -18,7 +18,7 @@ function HowPage() {
     >
       <h2>Step one — you bring the file</h2>
       <p>
-        Photos, scans, PDFs, Word, or text. Add them on Convert. Reorder and rotate until the stack looks right. No
+        Photos, scans, PDFs, Word, Excel, or text. Add them on Convert. Reorder and rotate until the stack looks right. No
         account. No queue.
       </p>
       <h2>Step two — we stay on this device</h2>

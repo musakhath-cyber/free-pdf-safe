@@ -24,7 +24,7 @@ function PrivacyPage() {
     >
       <h2>What this app does</h2>
       <p>
-        Free PDF Safe lets you convert photos, scans, PDFs, Word, and text into a PDF, stamp a signature, and read QR
+        Free PDF Safe lets you convert photos, scans, PDFs, Word, Excel, and text into a PDF, stamp a signature, and read QR
         codes. Convert, Sign, and Scan run in your browser on this device.
       </p>
       <h2>Files stay on your device</h2>
