@@ -1,14 +1,16 @@
 import { create } from "zustand";
 import { loadScans, loadSignatures, saveScans, saveSignatures } from "@/lib/pdf/storage";
-import type { PageSizeId, ScanRecord, SignatureAsset, Stamp, StudioMode, StudioPage } from "@/lib/pdf/types";
+import type { Mark, PageSizeId, ScanRecord, SignatureAsset, Stamp, StudioMode, StudioPage } from "@/lib/pdf/types";
 
 type Snapshot = {
   pages: StudioPage[];
   stamps: Stamp[];
+  marks: Mark[];
   activePageId: string | null;
   signatures: SignatureAsset[];
   activeSignatureId: string | null;
   selectedStampId: string | null;
+  selectedMarkId: string | null;
 };
 
 type StudioState = {
@@ -18,10 +20,12 @@ type StudioState = {
   pages: StudioPage[];
   signatures: SignatureAsset[];
   stamps: Stamp[];
+  marks: Mark[];
   scans: ScanRecord[];
   activePageId: string | null;
   activeSignatureId: string | null;
   selectedStampId: string | null;
+  selectedMarkId: string | null;
   undoStack: Snapshot[];
   hydrate: () => void;
   setMode: (mode: StudioMode) => void;
@@ -43,6 +47,10 @@ type StudioState = {
   updateStamp: (id: string, patch: Partial<Pick<Stamp, "nx" | "ny" | "nw" | "nh">>) => void;
   removeStamp: (id: string) => void;
   selectStamp: (id: string | null) => void;
+  addMark: (mark: Mark) => void;
+  updateMark: (id: string, patch: Partial<Omit<Mark, "id" | "pageId" | "kind">>) => void;
+  removeMark: (id: string) => void;
+  selectMark: (id: string | null) => void;
   addScan: (scan: ScanRecord) => void;
   removeScan: (id: string) => void;
 };
@@ -51,10 +59,12 @@ function shot(state: StudioState): Snapshot {
   return {
     pages: state.pages,
     stamps: state.stamps,
+    marks: state.marks,
     activePageId: state.activePageId,
     signatures: state.signatures,
     activeSignatureId: state.activeSignatureId,
     selectedStampId: state.selectedStampId,
+    selectedMarkId: state.selectedMarkId,
   };
 }
 
@@ -65,10 +75,12 @@ export const useStudio = create<StudioState>((set, get) => ({
   pages: [],
   signatures: [],
   stamps: [],
+  marks: [],
   scans: [],
   activePageId: null,
   activeSignatureId: null,
   selectedStampId: null,
+  selectedMarkId: null,
   undoStack: [],
   hydrate: () => {
     if (get().hydrated) return;
@@ -82,7 +94,7 @@ export const useStudio = create<StudioState>((set, get) => ({
   },
   setMode: (mode) => set({ mode }),
   setPageSize: (pageSize) => set({ pageSize }),
-  setActivePageId: (id) => set({ activePageId: id, selectedStampId: null }),
+  setActivePageId: (id) => set({ activePageId: id, selectedStampId: null, selectedMarkId: null }),
   beginHistory: () => {
     const state = get();
     set({ undoStack: [...state.undoStack, shot(state)].slice(-40) });
@@ -96,10 +108,12 @@ export const useStudio = create<StudioState>((set, get) => ({
       undoStack: stack.slice(0, -1),
       pages: prev.pages,
       stamps: prev.stamps,
+      marks: prev.marks,
       activePageId: prev.activePageId,
       signatures: prev.signatures,
       activeSignatureId: prev.activeSignatureId,
       selectedStampId: prev.selectedStampId,
+      selectedMarkId: prev.selectedMarkId,
     });
   },
   addPages: (pages) => {
@@ -118,6 +132,7 @@ export const useStudio = create<StudioState>((set, get) => ({
       return {
         pages,
         stamps: state.stamps.filter((stamp) => stamp.pageId !== id),
+        marks: state.marks.filter((mark) => mark.pageId !== id),
         activePageId: state.activePageId === id ? (neighbor?.id ?? null) : state.activePageId,
         selectedStampId: state.stamps.find((stamp) => stamp.id === state.selectedStampId)?.pageId === id
           ? null
@@ -158,12 +173,14 @@ export const useStudio = create<StudioState>((set, get) => ({
       return { pages };
     });
   },
-  clearPages: () => set({ pages: [], stamps: [], selectedStampId: null, activePageId: null }),
+  clearPages: () => set({ pages: [], stamps: [], marks: [], selectedStampId: null, selectedMarkId: null, activePageId: null }),
   cancelWork: () =>
     set({
       pages: [],
       stamps: [],
+      marks: [],
       selectedStampId: null,
+      selectedMarkId: null,
       activePageId: null,
       undoStack: [],
     }),
@@ -199,6 +216,22 @@ export const useStudio = create<StudioState>((set, get) => ({
     }));
   },
   selectStamp: (id) => set({ selectedStampId: id }),
+  addMark: (mark) => {
+    get().beginHistory();
+    set((state) => ({ marks: [...state.marks, mark], selectedMarkId: mark.id }));
+  },
+  updateMark: (id, patch) =>
+    set((state) => ({
+      marks: state.marks.map((mark) => (mark.id === id ? { ...mark, ...patch } : mark)),
+    })),
+  removeMark: (id) => {
+    get().beginHistory();
+    set((state) => ({
+      marks: state.marks.filter((mark) => mark.id !== id),
+      selectedMarkId: state.selectedMarkId === id ? null : state.selectedMarkId,
+    }));
+  },
+  selectMark: (id) => set({ selectedMarkId: id }),
   addScan: (scan) => {
     const scans = [scan, ...get().scans.filter((item) => item.text !== scan.text)].slice(0, 20);
     saveScans(scans);

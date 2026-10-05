@@ -1,4 +1,4 @@
-import { FileStack, PenLine, ScanLine } from "lucide-react";
+import { FileStack, Highlighter, PenLine, ScanLine } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Toaster } from "sonner";
@@ -14,11 +14,13 @@ import type { StudioMode } from "@/lib/pdf/types";
 import { cn } from "@/lib/utils";
 import { useStudio } from "@/store/studio";
 import { ConvertView } from "./convert-view";
+import { EditView } from "./edit-view";
 import { ScanView } from "./scan-view";
 import { SignView } from "./sign-view";
 
 const NAV: { id: StudioMode; label: string; icon: typeof FileStack }[] = [
   { id: "convert", label: "Convert", icon: FileStack },
+  { id: "edit", label: "Edit", icon: Highlighter },
   { id: "sign", label: "Sign", icon: PenLine },
   { id: "scan", label: "Scan", icon: ScanLine },
 ];
@@ -28,7 +30,7 @@ const FALLBACK: PublicSiteSettings = {
   adsensePublisherId: "",
   adsenseSlotId: "",
   siteNotice: "",
-  tagline: "Convert, sign, and scan. Files never leave this device.",
+  tagline: "Convert, edit, sign, and scan. Files never leave this device.",
 };
 
 export function StudioApp() {
@@ -63,7 +65,7 @@ export function StudioApp() {
           <ul className="hero-chips">
             <li>No account</li>
             <li>Stays in this tab</li>
-            <li>Convert · Sign · Scan</li>
+            <li>Convert · Edit · Sign · Scan</li>
           </ul>
           {settings.siteNotice ? <p className="studio-notice">{settings.siteNotice}</p> : null}
         </div>
@@ -72,6 +74,7 @@ export function StudioApp() {
 
       <main id="studio" className="studio-main">
         {mode === "convert" ? <ConvertView /> : null}
+        {mode === "edit" ? <EditView /> : null}
         {mode === "sign" ? <SignView /> : null}
         {mode === "scan" ? <ScanView /> : null}
         <AdSlot settings={settings} />

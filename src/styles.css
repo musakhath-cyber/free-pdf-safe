@@ -91,7 +91,7 @@
   position: sticky;
   bottom: 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 4px;
   margin: 0 16px calc(12px + env(safe-area-inset-bottom));
   padding: 8px 8px 10px;
@@ -190,6 +190,46 @@
 .nav-item.is-on {
   color: var(--color-primary);
   background: rgb(255 255 255 / 55%);
+}
+
+.edit-tools {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.edit-tool {
+  height: 36px;
+  flex: 0 0 auto;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 62%);
+  border: 1px solid rgb(255 255 255 / 80%);
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.edit-tool.is-on {
+  background: linear-gradient(180deg, #6aa6ff, #3d7dff);
+  color: white;
+}
+
+.edit-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 2px solid white;
+  box-shadow: 0 0 0 1px rgb(11 39 72 / 12%);
+}
+
+.edit-swatch.is-on {
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.edit-stage {
+  container-type: inline-size;
 }
 
 .drop-stage {
@@ -856,7 +896,7 @@
   }
 
   .step-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .cap-grid {

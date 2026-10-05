@@ -24,6 +24,8 @@ export function ConvertView() {
   const removePage = useStudio((state) => state.removePage);
   const rotatePage = useStudio((state) => state.rotatePage);
   const activePageId = useStudio((state) => state.activePageId);
+  const stamps = useStudio((state) => state.stamps);
+  const marks = useStudio((state) => state.marks);
   const setMode = useStudio((state) => state.setMode);
   const preview = pages.find((page) => page.id === activePageId) ?? pages[0];
 
@@ -45,7 +47,7 @@ export function ConvertView() {
   }
 
   async function buildPdf() {
-    const bytes = await assemblePdf(pages, pageSize);
+    const bytes = await assemblePdf(pages, pageSize, stamps, marks);
     const name = pdfFilename(pages.length === 1 ? pages[0].name.replace(/\.[^.]+$/, "") : "free-pdf-safe");
     const file = bytesToPdfFile(name, bytes);
     setLastPdf(file);
@@ -182,6 +184,9 @@ export function ConvertView() {
           </Button>
           <SharePdfButton file={lastPdf} disabled={busy !== null} onNeedFile={ensurePdf} />
           <PrintPdfButton file={lastPdf} disabled={busy !== null} onNeedFile={ensurePdf} />
+          <Button variant="secondary" className="w-full" onClick={() => setMode("edit")}>
+            Edit this
+          </Button>
           <Button variant="secondary" className="w-full" onClick={() => setMode("sign")}>
             Sign this
           </Button>

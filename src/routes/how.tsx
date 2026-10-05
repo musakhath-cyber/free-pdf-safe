@@ -14,12 +14,12 @@ function HowPage() {
     <MarketingPage
       kicker="How it works"
       title="A studio in this tab."
-      lede="Drop paper, stamp a mark, or read a QR code. Convert, Sign, and Scan never send your files to our servers."
+      lede="Drop paper, mark it up, stamp a signature, or read a QR code. Convert, Edit, Sign, and Scan never send your files to our servers."
     >
       <h2>Step one — you bring the file</h2>
       <p>
-        Photos, scans, PDFs, Word, Excel, or text. Add them on Convert. Reorder and rotate until the stack looks right. No
-        account. No queue.
+        Photos, scans, PDFs, Word, Excel, or text. Add them on Convert. Reorder and rotate until the stack looks right. On
+        Edit, add text, highlight, draw, cover a line, or leave a note. No account. No queue.
       </p>
       <h2>Step two — we stay on this device</h2>
       <p>

@@ -40,4 +40,19 @@ export type ScanRecord = {
   at: number;
 };
 
-export type StudioMode = "convert" | "sign" | "scan";
+export type StudioMode = "convert" | "edit" | "sign" | "scan";
+
+export type MarkKind = "text" | "highlight" | "ink" | "whiteout" | "note";
+
+export type Mark = {
+  id: string;
+  pageId: string;
+  kind: MarkKind;
+  nx: number;
+  ny: number;
+  nw: number;
+  nh: number;
+  text: string;
+  color: string;
+  points: { x: number; y: number }[];
+};

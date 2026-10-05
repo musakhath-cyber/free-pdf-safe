@@ -41,6 +41,7 @@ export function SignView() {
     activeSignatureId,
     setActiveSignature,
     stamps,
+    marks,
     addStamp,
     updateStamp,
     removeStamp,
@@ -223,7 +224,7 @@ export function SignView() {
   }
 
   async function buildPdf() {
-    const bytes = await assemblePdf(pages, pageSize, stamps);
+    const bytes = await assemblePdf(pages, pageSize, stamps, marks);
     const file = bytesToPdfFile(pdfFilename("signed"), bytes);
     setLastPdf(file);
     return file;

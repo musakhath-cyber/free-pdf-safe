@@ -1,12 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { FileStack, PenLine, ScanLine } from "lucide-react";
+import { FileStack, Highlighter, PenLine, ScanLine } from "lucide-react";
 
 export function HomeSections() {
   return (
     <div className="home-sections">
       <section>
         <p className="site-kicker">How it works</p>
-        <h2 className="site-h2">Three tools. Then a PDF you keep.</h2>
+        <h2 className="site-h2">Four tools. Then a PDF you keep.</h2>
         <div className="step-grid">
           <article className="surface-card">
             <p className="step-num">01</p>
@@ -19,13 +19,21 @@ export function HomeSections() {
           <article className="surface-card">
             <p className="step-num">02</p>
             <span className="step-icon">
+              <Highlighter className="size-5" />
+            </span>
+            <h3 className="step-title">Mark it up</h3>
+            <p className="step-copy">Add text, highlight, draw, cover a line, or leave a note. Like a markup pen, on this device.</p>
+          </article>
+          <article className="surface-card">
+            <p className="step-num">03</p>
+            <span className="step-icon">
               <PenLine className="size-5" />
             </span>
             <h3 className="step-title">Stamp a signature</h3>
             <p className="step-copy">Draw or type a mark. Place it on the page. Nothing is uploaded to sign.</p>
           </article>
           <article className="surface-card">
-            <p className="step-num">03</p>
+            <p className="step-num">04</p>
             <span className="step-icon">
               <ScanLine className="size-5" />
             </span>
@@ -47,6 +55,10 @@ export function HomeSections() {
           <li className="surface-card px-5 py-4">
             <p className="font-medium text-ink">Convert</p>
             <p className="mt-1 text-sm text-muted">JPEG, PNG, WebP, PDF, Word, Excel, and text into one document.</p>
+          </li>
+          <li className="surface-card px-5 py-4">
+            <p className="font-medium text-ink">Edit</p>
+            <p className="mt-1 text-sm text-muted">Text, highlight, draw, cover, and notes. Existing words are not reflowed like a desktop editor.</p>
           </li>
           <li className="surface-card px-5 py-4">
             <p className="font-medium text-ink">Sign</p>

@@ -1,18 +1,19 @@
 import { canvasToJpeg, dataUrlToBytes, flattenPage } from "./canvas";
-import type { PageSizeId, Stamp, StudioPage } from "./types";
+import type { Mark, PageSizeId, Stamp, StudioPage } from "./types";
 import { PAGE_SIZES } from "./types";
 
 export async function assemblePdf(
   pages: StudioPage[],
   size: PageSizeId,
   stamps: Stamp[] = [],
+  marks: Mark[] = [],
 ): Promise<Uint8Array> {
   if (pages.length === 0) throw new Error("Add a page first.");
   const { PDFDocument } = await import("pdf-lib");
   const pdf = await PDFDocument.create();
   const spec = PAGE_SIZES[size];
   for (const page of pages) {
-    const canvas = await flattenPage(page, size, stamps);
+    const canvas = await flattenPage(page, size, stamps, marks);
     const jpeg = await canvasToJpeg(canvas, 0.9);
     const image = await pdf.embedJpg(dataUrlToBytes(jpeg));
     const sheet = pdf.addPage([spec.widthPt, spec.heightPt]);
