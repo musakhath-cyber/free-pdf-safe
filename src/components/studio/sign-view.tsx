@@ -9,6 +9,7 @@ import { bytesToPdfFile, canSharePdf, sharePdfFile } from "@/lib/pdf/share";
 import type { Stamp } from "@/lib/pdf/types";
 import { downloadBlob, uid } from "@/lib/utils";
 import { useStudio } from "@/store/studio";
+import { DocumentStage } from "./document-stage";
 import { EditorBar } from "./editor-bar";
 import { PageFilmstrip } from "./page-filmstrip";
 import { PageFrame } from "./page-frame";
@@ -341,25 +342,27 @@ export function SignView() {
       ) : (
         <div className="space-y-3">
           <EditorBar />
-          <PageFrame
-            page={currentPage}
-            pageSize={pageSize}
-            stamps={pageStamps}
-            selectedStampId={selectedStampId}
-            interactive
-            onPageClick={() => {
-              if (selectedStampId) {
+          <DocumentStage>
+            <PageFrame
+              page={currentPage}
+              pageSize={pageSize}
+              stamps={pageStamps}
+              selectedStampId={selectedStampId}
+              interactive
+              onPageClick={() => {
+                if (selectedStampId) {
+                  selectStamp(null);
+                  toast.success("Signature committed.");
+                }
+              }}
+              onStampPointerDown={onStampPointerDown}
+              onStampCommit={() => {
                 selectStamp(null);
                 toast.success("Signature committed.");
-              }
-            }}
-            onStampPointerDown={onStampPointerDown}
-            onStampCommit={() => {
-              selectStamp(null);
-              toast.success("Signature committed.");
-            }}
-            className="mx-auto w-full max-w-[360px]"
-          />
+              }}
+              className="w-full"
+            />
+          </DocumentStage>
           <p className="text-center text-sm text-muted">
             {active
               ? "Press Stamp on page, drag the blue box, then double-tap the signature or tap outside it to commit."

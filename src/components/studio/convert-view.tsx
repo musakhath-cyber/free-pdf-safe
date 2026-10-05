@@ -8,6 +8,7 @@ import { bytesToPdfFile, canSharePdf, sharePdfFile } from "@/lib/pdf/share";
 import { downloadBlob } from "@/lib/utils";
 import { useStudio } from "@/store/studio";
 import { EditorBar } from "./editor-bar";
+import { DocumentStage } from "./document-stage";
 import { PageFilmstrip } from "./page-filmstrip";
 import { PageFrame } from "./page-frame";
 import { PrintPdfButton } from "./print-pdf-button";
@@ -130,7 +131,9 @@ export function ConvertView() {
         <div className="space-y-4">
           <EditorBar />
           {preview ? (
-            <PageFrame page={preview} pageSize={pageSize} className="mx-auto w-full max-w-[360px]" />
+            <DocumentStage>
+              <PageFrame page={preview} pageSize={pageSize} className="w-full" />
+            </DocumentStage>
           ) : null}
           {preview ? (
             <div className="flex items-center justify-center gap-1">

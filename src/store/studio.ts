@@ -26,11 +26,13 @@ type StudioState = {
   activeSignatureId: string | null;
   selectedStampId: string | null;
   selectedMarkId: string | null;
+  zoom: number;
   undoStack: Snapshot[];
   hydrate: () => void;
   setMode: (mode: StudioMode) => void;
   setPageSize: (pageSize: PageSizeId) => void;
   setActivePageId: (id: string | null) => void;
+  setZoom: (zoom: number) => void;
   beginHistory: () => void;
   undo: () => void;
   addPages: (pages: StudioPage[]) => void;
@@ -81,6 +83,7 @@ export const useStudio = create<StudioState>((set, get) => ({
   activeSignatureId: null,
   selectedStampId: null,
   selectedMarkId: null,
+  zoom: 1,
   undoStack: [],
   hydrate: () => {
     if (get().hydrated) return;
@@ -95,6 +98,7 @@ export const useStudio = create<StudioState>((set, get) => ({
   setMode: (mode) => set({ mode }),
   setPageSize: (pageSize) => set({ pageSize }),
   setActivePageId: (id) => set({ activePageId: id, selectedStampId: null, selectedMarkId: null }),
+  setZoom: (zoom) => set({ zoom: Math.min(2.5, Math.max(0.7, zoom)) }),
   beginHistory: () => {
     const state = get();
     set({ undoStack: [...state.undoStack, shot(state)].slice(-40) });

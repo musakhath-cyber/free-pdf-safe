@@ -87,6 +87,47 @@
   margin: 0 auto;
 }
 
+.zoom-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.zoom-bar .range {
+  flex: 1;
+}
+
+.doc-viewport {
+  width: 100%;
+  height: calc(100dvh - 210px);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.doc-sheet {
+  margin-inline: auto;
+  min-width: 0;
+}
+
+.studio-shell.is-working .site-header,
+.studio-shell.is-working .studio-hero,
+.studio-shell.is-working .home-sections,
+.studio-shell.is-working .site-footer,
+.studio-shell.is-working .owner-link,
+.studio-shell.is-working .studio-aside {
+  display: none;
+}
+
+.studio-shell.is-working .studio-main {
+  max-width: none;
+  width: 100%;
+  padding: 8px 10px 0;
+}
+
 .studio-nav {
   position: sticky;
   bottom: 0;

@@ -35,9 +35,11 @@ const FALLBACK: PublicSiteSettings = {
 
 export function StudioApp() {
   const mode = useStudio((state) => state.mode);
+  const pages = useStudio((state) => state.pages);
   const setMode = useStudio((state) => state.setMode);
   const hydrate = useStudio((state) => state.hydrate);
   const [settings, setSettings] = useState<PublicSiteSettings>(FALLBACK);
+  const working = pages.length > 0 && mode !== "scan";
 
   useEffect(() => {
     hydrate();
@@ -50,7 +52,7 @@ export function StudioApp() {
   }, []);
 
   return (
-    <div className="studio-shell">
+    <div className={cn("studio-shell", working && "is-working")}>
       <SiteHeader />
       <div className="studio-hero">
         <div className="hero-copy">
@@ -77,7 +79,9 @@ export function StudioApp() {
         {mode === "edit" ? <EditView /> : null}
         {mode === "sign" ? <SignView /> : null}
         {mode === "scan" ? <ScanView /> : null}
-        <AdSlot settings={settings} />
+        <div className="studio-aside">
+          <AdSlot settings={settings} />
+        </div>
         <p className="owner-link">
           <InstallLink />
           <Link to="/privacy">Privacy</Link>

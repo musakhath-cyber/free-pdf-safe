@@ -8,6 +8,7 @@ import { bytesToPdfFile } from "@/lib/pdf/share";
 import type { Mark, MarkKind } from "@/lib/pdf/types";
 import { cn, downloadBlob, uid } from "@/lib/utils";
 import { useStudio } from "@/store/studio";
+import { DocumentStage } from "./document-stage";
 import { EditorBar } from "./editor-bar";
 import { PageFilmstrip } from "./page-filmstrip";
 import { PageFrame } from "./page-frame";
@@ -317,7 +318,8 @@ export function EditView() {
             </div>
           ) : null}
 
-          <div ref={frameRef} className="edit-stage relative mx-auto w-full max-w-[360px]">
+          <DocumentStage innerRef={frameRef}>
+            <div className="edit-stage relative w-full">
             <PageFrame page={page} pageSize={pageSize} stamps={pageStamps} className="w-full" />
             <div
               className={cn("absolute inset-0 z-30", tool === "select" ? "touch-manipulation" : "touch-none")}
@@ -432,6 +434,7 @@ export function EditView() {
               ) : null}
             </div>
           </div>
+          </DocumentStage>
 
           <p className="text-center text-[12px] text-subtle">
             {tool === "select"
