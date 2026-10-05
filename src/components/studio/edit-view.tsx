@@ -44,6 +44,7 @@ export function EditView() {
     nw: number;
     nh: number;
     points: Mark["points"];
+    armed: boolean;
   } | null>(null);
   const drawRef = useRef<{ kind: "highlight" | "whiteout" | "ink"; points: { x: number; y: number }[] } | null>(null);
   const [tool, setTool] = useState<Tool>("text");
@@ -81,18 +82,22 @@ export function EditView() {
 
   function placeText(kind: "text" | "note", at: { x: number; y: number }) {
     if (!page) return;
+    const nw = kind === "note" ? 0.36 : 0.28;
+    const nh = kind === "note" ? 0.09 : 0.04;
+    const id = uid();
     addMark({
-      id: uid(),
+      id,
       pageId: page.id,
       kind,
-      nx: Math.min(0.62, at.x),
-      ny: Math.min(0.86, at.y),
-      nw: kind === "note" ? 0.42 : 0.48,
-      nh: kind === "note" ? 0.14 : 0.08,
-      text: kind === "note" ? "Note" : "Text",
+      nx: Math.min(Math.max(0, at.x - 0.02), Math.max(0, 1 - nw)),
+      ny: Math.min(Math.max(0, at.y - nh * 0.45), Math.max(0, 1 - nh)),
+      nw,
+      nh,
+      text: "",
       color: kind === "note" ? "#3d2a00" : color,
       points: [],
     });
+    window.setTimeout(() => document.getElementById(`mark-${id}`)?.focus(), 30);
   }
 
   function finishDraw() {
@@ -164,10 +169,7 @@ export function EditView() {
   }
 
   function onMarkDown(mark: Mark, event: React.PointerEvent, mode: "move" | "resize") {
-    if (tool !== "select") return;
     event.stopPropagation();
-    event.preventDefault();
-    beginHistory();
     selectMark(mark.id);
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
     dragRef.current = {
@@ -180,6 +182,7 @@ export function EditView() {
       nw: mark.nw,
       nh: mark.nh,
       points: mark.points,
+      armed: false,
     };
   }
 
@@ -187,12 +190,19 @@ export function EditView() {
     const drag = dragRef.current;
     const box = frameRef.current?.getBoundingClientRect();
     if (!drag || !box) return;
-    const dx = (event.clientX - drag.startX) / box.width;
-    const dy = (event.clientY - drag.startY) / box.height;
+    const dxPx = event.clientX - drag.startX;
+    const dyPx = event.clientY - drag.startY;
+    if (!drag.armed) {
+      if (Math.hypot(dxPx, dyPx) < 6) return;
+      drag.armed = true;
+      beginHistory();
+    }
+    const dx = dxPx / box.width;
+    const dy = dyPx / box.height;
     if (drag.mode === "resize") {
       updateMark(drag.id, {
-        nw: Math.min(1 - drag.nx, Math.max(0.08, drag.nw + dx)),
-        nh: Math.min(1 - drag.ny, Math.max(0.04, drag.nh + dy)),
+        nw: Math.min(1 - drag.nx, Math.max(0.12, drag.nw + dx)),
+        nh: Math.min(1 - drag.ny, Math.max(0.028, drag.nh + dy)),
       });
       return;
     }
@@ -318,8 +328,8 @@ export function EditView() {
             </div>
           ) : null}
 
-          <DocumentStage innerRef={frameRef}>
-            <div className="edit-stage relative w-full">
+          <DocumentStage>
+            <div ref={frameRef} className="edit-stage relative w-full">
             <PageFrame page={page} pageSize={pageSize} stamps={pageStamps} className="w-full" />
             <div
               className={cn("absolute inset-0 z-30", tool === "select" ? "touch-manipulation" : "touch-none")}
@@ -356,14 +366,9 @@ export function EditView() {
               {pageMarks
                 .filter((mark) => mark.kind !== "ink")
                 .map((mark) => (
-                  <button
+                  <div
                     key={mark.id}
-                    type="button"
-                    className={cn(
-                      "absolute overflow-hidden text-left",
-                      tool === "select" ? "pointer-events-auto" : "pointer-events-none",
-                      selected?.id === mark.id && "ring-2 ring-primary",
-                    )}
+                    className={cn("absolute text-left", selected?.id === mark.id && "ring-2 ring-primary")}
                     style={{
                       left: `${mark.nx * 100}%`,
                       top: `${mark.ny * 100}%`,
@@ -378,29 +383,63 @@ export function EditView() {
                               ? "#fff4c2"
                               : "transparent",
                       color: mark.color,
-                      fontSize: "clamp(11px, 3.2cqw, 18px)",
-                      fontWeight: 650,
-                      lineHeight: 1.25,
-                      padding: mark.kind === "text" || mark.kind === "note" ? "4px 6px" : 0,
                       border: mark.kind === "note" ? "1px solid rgba(11,39,72,0.2)" : undefined,
                     }}
-                    onPointerDown={(event) => onMarkDown(mark, event, "move")}
+                    onPointerDown={(event) => {
+                      event.stopPropagation();
+                      if (tool === "select" || !(event.target instanceof HTMLTextAreaElement)) {
+                        onMarkDown(mark, event, "move");
+                      } else {
+                        selectMark(mark.id);
+                      }
+                    }}
                     onPointerMove={onMarkMove}
-                    onPointerUp={() => {
+                    onPointerUp={(event) => {
+                      const drag = dragRef.current;
                       dragRef.current = null;
+                      if (drag && !drag.armed && (mark.kind === "text" || mark.kind === "note")) {
+                        event.currentTarget.querySelector("textarea")?.focus();
+                      }
                     }}
                   >
-                    {mark.kind === "text" || mark.kind === "note" ? mark.text : null}
-                    {tool === "select" && selected?.id === mark.id && mark.kind !== "ink" ? (
+                    {mark.kind === "text" || mark.kind === "note" ? (
+                      <>
+                        <span
+                          aria-label="Drag text"
+                          className="absolute inset-y-0 left-0 z-10 w-2.5 cursor-grab bg-primary/80"
+                          onPointerDown={(event) => onMarkDown(mark, event, "move")}
+                          onPointerMove={onMarkMove}
+                          onPointerUp={() => {
+                            dragRef.current = null;
+                          }}
+                        />
+                        <textarea
+                          id={`mark-${mark.id}`}
+                          value={mark.text}
+                          placeholder={mark.kind === "note" ? "Note" : "Type"}
+                          className="size-full resize-none bg-transparent py-0 pl-3 pr-1 outline-none"
+                          style={{ color: mark.color, fontSize: "clamp(13px, 2.4cqw, 22px)", lineHeight: 1.1 }}
+                          onChange={(event) => updateMark(mark.id, { text: event.target.value })}
+                          onPointerDown={(event) => {
+                            if (tool !== "select") event.stopPropagation();
+                          }}
+                        />
+                      </>
+                    ) : null}
+                    {selected?.id === mark.id && mark.kind !== "ink" ? (
                       <span
-                        className="absolute bottom-0 right-0 size-4 cursor-nwse-resize rounded-sm bg-primary"
+                        className="absolute bottom-0 right-0 z-10 size-4 cursor-nwse-resize rounded-sm bg-primary"
                         onPointerDown={(event) => onMarkDown(mark, event, "resize")}
+                        onPointerMove={onMarkMove}
+                        onPointerUp={() => {
+                          dragRef.current = null;
+                        }}
                       />
                     ) : null}
-                  </button>
+                  </div>
                 ))}
               {pageMarks
-                .filter((mark) => mark.kind === "ink" && tool === "select")
+                .filter((mark) => mark.kind === "ink")
                 .map((mark) => (
                   <button
                     key={`${mark.id}-hit`}
@@ -438,9 +477,9 @@ export function EditView() {
 
           <p className="text-center text-[12px] text-subtle">
             {tool === "select"
-              ? "Drag a mark to move it. Drag the blue corner to resize."
+              ? "Drag a box to move it. Drag the blue corner to resize. Click the words to type."
               : tool === "text"
-                ? "Tap the page to drop text, then type below."
+                ? "Tap the spot the words should start. Drag the blue bar to move the box. Type inside it."
                 : tool === "highlight"
                   ? "Drag across a line to highlight it."
                   : tool === "ink"
